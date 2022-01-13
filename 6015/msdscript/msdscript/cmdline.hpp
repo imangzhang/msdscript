@@ -12,6 +12,6 @@
 #include <string>
 
 //declaration of use_arguments
-std::string use_arguments(int argc, char **argv);
+void use_arguments(int argc, char **argv);
 
 #endif /* cmdline_hpp */
