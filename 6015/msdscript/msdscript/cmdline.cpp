@@ -5,9 +5,11 @@
 //  Created by Ang Zhang on 1/12/22.
 //
 
+#define CATCH_CONFIG_RUNNER
 #include "cmdline.hpp"
 #include <string>
 #include <iostream>
+#include "catch.h"
 
 //function of use_arguments
 //parameter: argc, argv
@@ -23,8 +25,14 @@ void use_arguments(int argc, char **argv){
         else if (input=="--test"){//"--test" condition
             if(testCount==false){//only the "--test" never has been entered, the
                                 //test will pass
-            std::cout<<"Tests passed."<<"\n";
-                testCount =true;
+                //Catch::Session().run();
+                if (Catch::Session().run() == 0){
+                    std::cout<<"Tests passed."<<"\n";
+                    testCount =true;
+                }else{
+                    std::cout<<"Tests failed."<<"\n";
+                    exit(1);
+                }
             }
             else{std::cerr<<"error!"<<"\n"; //otherwise, it will warn an error
                 exit(1);
