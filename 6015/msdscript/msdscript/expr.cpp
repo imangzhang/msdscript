@@ -8,8 +8,21 @@
 #include "expr.hpp"
 #include "catch.h"
 #include <stdexcept>
+#include <sstream>
+#include <iostream>
 
+//methods of to-string
+static std::string to_string(Expr* e){
+    std::stringstream o;
+    e->print(o);
+    return o.str();
+}
 
+static std::string to_string_pretty(Expr* e){
+    std::stringstream o;
+    e->pretty_print(o);
+    return o.str();
+};
 
 //--------------------------------***Num***--------------------------------
 Num::Num(int val){
@@ -42,7 +55,17 @@ Expr* Num::subst(std::string original, Expr* replacement){
     return this;
 }
 
+void Num::print(std::ostream &out){
+    out << this ->val;
+}
 
+void Num::pretty_print(std::ostream &out){
+    out << this ->val;
+}
+
+precedence_t Num::pretty_print_at(){
+    return prec_none;
+}
 
 
 //--------------------------------***Add***--------------------------------
@@ -78,7 +101,37 @@ Expr* Add::subst(std::string original, Expr* replacement){
     return new Add(lhs->subst(original,replacement),rhs->subst(original, replacement));
 }
 
+//print for add
+void Add::print(std::ostream &out){
+//    std::stringstream lhsOut(" ");
+//    std::stringstream rhsOut(" ");
+//    this->lhs->print(lhsOut);
+//    this->rhs->print(rhsOut);
+//    out <<"("<< lhsOut.str()<< "+" << rhsOut.str()<<")";
+    
+    out << "(";
+    this->lhs->print(out);
+    out << "+";
+    this->rhs->print(out);
+    out <<")";
+}
 
+precedence_t Add::pretty_print_at(){
+    return prec_add;
+}
+
+//pretty print for add
+void Add::pretty_print(std::ostream &out){
+    if(this->lhs->pretty_print_at() == prec_add){
+        out << "(";
+        this->lhs->pretty_print(out);
+        out <<")";
+    }else{
+        this->lhs->pretty_print(out);
+    }
+    out << " + ";
+    this->rhs->pretty_print(out);
+}
 
 //--------------------------------***Mult***--------------------------------
 
@@ -113,7 +166,35 @@ Expr* Mult::subst(std::string original, Expr *replacement){
     return new Mult(lhs->subst(original, replacement), rhs->subst(original,replacement));
 }
 
+//print for Mult
+void Mult::print(std::ostream &out){
+    std::stringstream lhsOut(" ");
+    std::stringstream rhsOut(" ");
+    this->lhs->print(lhsOut);
+    this->rhs->print(rhsOut);
+    out << "("<<lhsOut.str()<< "*" << rhsOut.str()<<")";
+}
 
+precedence_t Mult::pretty_print_at(){
+    return prec_mult;
+}
+
+//pretty print for Mult
+void Mult::pretty_print(std::ostream &out){
+    if(this->lhs->pretty_print_at() == prec_add || this->lhs->pretty_print_at() == prec_mult){
+        out << "(";
+        this->lhs->pretty_print(out);
+        out<< ")";
+    }else{this->lhs->pretty_print(out);}
+    out << " * ";
+    
+    if(this->rhs->pretty_print_at() == prec_add){
+        out << "(";
+        this->rhs->pretty_print(out);
+        out<< ")";
+    }else{this->rhs->pretty_print(out);}
+        
+}
 
 //--------------------------------***Var***--------------------------------
 
@@ -151,8 +232,44 @@ Expr* Var::subst(std::string original, Expr *replacement){
     }
 }
 
+//print for var
+void Var::print(std::ostream &out){
+    out << this ->variable;
+}
+
+//pretty print for var
+void Var::pretty_print(std::ostream &out){
+    out << this ->variable;
+}
+
+precedence_t Var::pretty_print_at(){
+    return prec_none;
+}
 
 //--------------------------------***Tests***--------------------------------
+
+TEST_CASE("print") {
+    CHECK(to_string(new Num(100)) == "100");
+    CHECK(to_string(new Var("xyz")) == "xyz");
+    CHECK(to_string(new Var("abc")) != "xyz");
+    CHECK(to_string((new Add((new Num(10)), (new Num(20))))) == "(10+20)");
+    CHECK(to_string((new Mult((new Num(10)), (new Num(20))))) == "(10*20)");
+    CHECK(to_string((new Add(new Num(1), new Add(new Num(2), new Num(3))))) == "(1+(2+3))");
+    CHECK(to_string((new Add(new Add(new Num(1), new Num(2)), new Num(3)))) == "((1+2)+3)");
+}
+
+TEST_CASE("pretty_print") {
+    CHECK(to_string_pretty(new Num(10)) == "10");
+    CHECK(to_string_pretty(new Var("xyz")) == "xyz");
+    CHECK(to_string_pretty((new Add((new Num(10)), (new Num(20))))) == "10 + 20");
+    CHECK(to_string_pretty((new Mult((new Num(10)), (new Num(20))))) == "10 * 20");
+    CHECK(to_string_pretty(new Add(new Num(1), new Mult(new Num(2), new Num(3)))) == "1 + 2 * 3");
+    CHECK(to_string_pretty(new Mult(new Num(1), new Add(new Num(2), new Num(3)))) == "1 * (2 + 3)");
+    CHECK(to_string_pretty(new Mult(new Mult(new Num(2), new Num(3)), new Num(4))) == "(2 * 3) * 4");
+    CHECK(to_string_pretty(new Mult(new Num(2), new Mult(new Num(3), new Num(4)))) == "2 * 3 * 4");
+}
+
+
 TEST_CASE("equals"){
     SECTION("Num"){
         CHECK( (new Num(1))->equals(new Num(1)));
