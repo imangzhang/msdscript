@@ -246,6 +246,67 @@ precedence_t Var::pretty_print_at(){
     return prec_none;
 }
 
+
+//--------------------------------***Let***----------------------------------
+
+
+_let::_let(std::string _letVariable, Expr *rhs, Expr *body){
+    this->_letVariable = _letVariable;
+    this->rhs = rhs;
+    this->body = body;
+};
+
+
+bool _let::equals(Expr *e){
+    _let *c = dynamic_cast<_let*>(e);
+    if(c == NULL){
+        return false;
+    }else{
+        return rhs->equals(c->rhs) && body->equals(c->body);
+    }
+}
+
+int _let::interp(){
+    int temp = rhs->interp();
+    return body->subst(_letVariable, new Num(temp))->interp();
+}
+
+
+bool _let::has_variable(){
+    return rhs->has_variable() || body->has_variable();
+}
+
+
+Expr* _let::subst(std::string original, Expr* replacement){
+    if(_letVariable != original){
+        return new _let(_letVariable, rhs->subst(original, replacement),body->subst(original,replacement));
+    }else{
+        return new _let(_letVariable, rhs->subst(original, replacement), body);
+    }
+}
+
+
+void _let::print(std::ostream &out){
+    out<<"(_let "<<_letVariable<<"=";
+    rhs->print(out);
+    out<<" _in ";
+    body->print(out);
+    out<<")";
+    
+}
+
+void _let::pretty_print(std::ostream &out){
+    out<<"_let "<<_letVariable<<" = ";
+    rhs->pretty_print(out);
+    out<<"\n";
+    out<<"_in ";
+    body->pretty_print(out);
+
+};
+precedence_t _let::pretty_print_at(){
+    return prec_none;
+};
+
 //--------------------------------***Tests***--------------------------------
 
 TEST_CASE("print") {
@@ -377,7 +438,64 @@ TEST_CASE("equals"){
 //    CHECK_THROWS_WITH( (new Var("x"))->interp(), "no value for variable" );
 // }
 //
+
 }
+TEST_CASE("_let"){
+    SECTION("equal"){
+        CHECK((new _let("a", new Num(10), new Num(20)))->equals((new _let("a", new Num(10), new Num(20)))));
+        CHECK(!(new _let("a", new Num(10), new Num(20)))->equals((new _let("a", new Num(20), new Num(10)))));
+        CHECK(!(new _let("a", new Num(10), new Num(20)))->equals((new _let("a", new Num(10), new Add(new Var("a"), new Num(10))))));
+        CHECK((new _let("a", new Num(10), new Add(new Var("a"), new Num(20))))
+              ->equals(new _let("a", new Num(10), new Add(new Var("a"), new Num(20)))));
+    }
+   
+    SECTION("interp"){
+        CHECK((new _let("a", new Num(10), new Num(20)))->interp() == 20);
+        CHECK((new _let("a", new Num(10), new Add(new Var("a"), new Num(20))))->interp() == 30);
+        CHECK_THROWS_WITH((new _let("a", new Var("a"), new Num(10)))->interp(),"This is not a integer!");
+        CHECK_THROWS_WITH((new _let("a", new Var("b"), new Add(new Var("b"), new Num(10))))->interp(), "This is not a integer!");
+    }
     
+    SECTION("has_variable"){
+        CHECK(!(new _let("x", new Num(10), new Num(20)))->has_variable());
+        CHECK((new _let("a", new Var("b"), new Var("c")))->has_variable());
+        CHECK((new _let("a", new Add(new Num(10), new Var("b")), new Add(new Num(10), new Num(20))))
+              ->has_variable());
+        CHECK(!(new _let("a", new Add(new Num(3), new Num(4)), new Add(new Num(100), new Num(10))))
+              ->has_variable());
+    }
+    
+    SECTION("subst"){
+        CHECK((new _let("a", new Num(3), new Num(5)))
+              ->subst("a", new Var("z"))->equals((new _let("a", new Num(3), new Num(5)))));
+        CHECK((new _let("a", new Var("y"), new Var("z")))
+              ->subst("a", new Var("xyz"))->equals((new _let("a", new Var("y"), new Var("z")))));
+        CHECK((new _let("a", new Var("b"), new Num(10)))
+              ->subst("b", new Num(5))->equals((new _let("a", new Num(5), new Num(10)))));
+        CHECK((new _let("a", new Add(new Num(10), new Var("b")), new Add(new Var("b"), new Num(20))))
+              ->subst("b", new Num(5))->equals((new _let("a", new Add(new Num(10), new Num(5)), new Add(new Num(5), new Num(20))))));
+    }
+    SECTION("print"){
+        CHECK(to_string(new _let("a", new Num(10), new Num(20))) == "(_let a=10 _in 20)");
+        CHECK(to_string(new _let("a", new Var("b"), new Var("c"))) == "(_let a=b _in c)");
+        CHECK(to_string(new _let("a", new Var("b"), new Add(new Num(10), new Num(20)))) == "(_let a=b _in (10+20))");
+        CHECK(to_string(new _let("x", new Add(new Num(10), new Var("xyz")), new Var("a"))) == "(_let x=(10+xyz) _in a)");
+    }
+    
+    SECTION("pretty_print"){
+        CHECK(to_string_pretty(new _let("a", new Num(10), new Add(new Var("a"), new Num(20)))) ==
+             "_let a = 10\n"
+             "_in a + 20");
+        CHECK(to_string_pretty(new _let("a", new Num(10), new Add(new _let("b", new Num(20), new Add(new Var("b"), new Num(6))), new Var("a")))) ==
+              "_let x = 10\n"
+              "_in (_let y = 20\n"
+              "   _in y + 6) + x");
+        CHECK(to_string_pretty(new Add(new Mult(new _let("x", new Num(10), new Var("x")), new Num(10)), new Num(20))) ==
+               "(_let x = 10\n"
+               " _in x) * 10 + 20");
+
+    }
+}
+
                                                              
 

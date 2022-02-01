@@ -15,6 +15,7 @@ typedef enum {
   prec_none,      // = 0
   prec_add,       // = 1
   prec_mult       // = 2
+  
 } precedence_t;
 
 class Expr{
@@ -40,8 +41,8 @@ public:
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
-    virtual void pretty_print(std::ostream &out);
-    virtual precedence_t pretty_print_at();
+    void pretty_print(std::ostream &out);
+    precedence_t pretty_print_at();
     
 };
 
@@ -56,8 +57,8 @@ public:
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
-    virtual void pretty_print(std::ostream &out);
-    virtual precedence_t pretty_print_at();
+    void pretty_print(std::ostream &out);
+    precedence_t pretty_print_at();
 };
 
 class Mult : public Expr {
@@ -71,8 +72,8 @@ public:
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
-    virtual void pretty_print(std::ostream &out);
-    virtual precedence_t pretty_print_at();
+    void pretty_print(std::ostream &out);
+    precedence_t pretty_print_at();
 };
 
 class Var : public Expr{
@@ -85,9 +86,25 @@ public:
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
-    virtual void pretty_print(std::ostream &out);
+    void pretty_print(std::ostream &out);
     precedence_t pretty_print_at();
 };
 
+
+class _let : public Expr{
+public:
+    std::string _letVariable;
+    Expr *rhs;
+    Expr *body;
+    
+    _let(std::string _letVariable, Expr *rhs, Expr *body);
+    bool equals(Expr *e);
+    int interp();
+    bool has_variable();
+    Expr* subst(std::string original, Expr* replacement);
+    void print(std::ostream &out);
+    void pretty_print(std::ostream &out);
+    precedence_t pretty_print_at();
+};
 
 #endif /* expr_hpp */
