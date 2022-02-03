@@ -60,11 +60,11 @@ void Num::print(std::ostream &out){
 }
 
 void Num::pretty_print(std::ostream &out){
-    out << this ->val;
+    pretty_print_at(out, prec_none, 0);
 }
 
-precedence_t Num::pretty_print_at(){
-    return prec_none;
+void Num::pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed){
+    out << this ->val;
 }
 
 
@@ -116,21 +116,24 @@ void Add::print(std::ostream &out){
     out <<")";
 }
 
-precedence_t Add::pretty_print_at(){
-    return prec_add;
+void Add::pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed){
+    if(prec == prec_add || prec == prec_mult || prec == prec_let){
+        out << "(";
+    }
+    lhs->pretty_print_at(out, prec_add, spaceNeed);
+    out << " + ";
+    rhs->pretty_print_at(out, prec_none, spaceNeed);
+
+    if(prec == prec_add || prec == prec_mult || prec == prec_let){
+        out <<")";
+    }
 }
 
 //pretty print for add
 void Add::pretty_print(std::ostream &out){
-    if(this->lhs->pretty_print_at() == prec_add){
-        out << "(";
-        this->lhs->pretty_print(out);
-        out <<")";
-    }else{
-        this->lhs->pretty_print(out);
-    }
+    lhs->pretty_print_at(out, prec_add, 0);
     out << " + ";
-    this->rhs->pretty_print(out);
+    rhs->pretty_print_at(out, prec_none, 0);
 }
 
 //--------------------------------***Mult***--------------------------------
@@ -170,29 +173,34 @@ Expr* Mult::subst(std::string original, Expr *replacement){
 void Mult::print(std::ostream &out){
     std::stringstream lhsOut(" ");
     std::stringstream rhsOut(" ");
-    this->lhs->print(lhsOut);
-    this->rhs->print(rhsOut);
-    out << "("<<lhsOut.str()<< "*" << rhsOut.str()<<")";
+    lhs->print(lhsOut);
+    rhs->print(rhsOut);
+    out << "(" << lhsOut.str() << "*" << rhsOut.str() << ")";
 }
 
-precedence_t Mult::pretty_print_at(){
-    return prec_mult;
+void Mult::pretty_print_at(std::ostream &out,precedence_t prec, int spaceNeed){
+    if(prec == prec_add){
+        this->lhs->pretty_print_at(out, prec_mult, spaceNeed);
+        out << " * ";
+        this->rhs->pretty_print_at(out, prec_add, spaceNeed);
+    }else{
+        if(prec == prec_mult){
+            out << "(";
+        }
+        this->lhs->pretty_print_at(out, prec_mult, spaceNeed);
+        out << " * ";
+        this->rhs->pretty_print_at(out, prec_let, spaceNeed);
+        if(prec == prec_mult){
+            out<< ")";
+        }
+    }
 }
 
 //pretty print for Mult
 void Mult::pretty_print(std::ostream &out){
-    if(this->lhs->pretty_print_at() == prec_add || this->lhs->pretty_print_at() == prec_mult){
-        out << "(";
-        this->lhs->pretty_print(out);
-        out<< ")";
-    }else{this->lhs->pretty_print(out);}
+    this->lhs->pretty_print_at(out, prec_mult, 0);
     out << " * ";
-    
-    if(this->rhs->pretty_print_at() == prec_add){
-        out << "(";
-        this->rhs->pretty_print(out);
-        out<< ")";
-    }else{this->rhs->pretty_print(out);}
+    this->rhs->pretty_print_at(out, prec_let, 0);
         
 }
 
@@ -239,11 +247,11 @@ void Var::print(std::ostream &out){
 
 //pretty print for var
 void Var::pretty_print(std::ostream &out){
-    out << this ->variable;
+    pretty_print_at(out, prec_none, 0);
 }
 
-precedence_t Var::pretty_print_at(){
-    return prec_none;
+void Var::pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed){
+    out << this ->variable;
 }
 
 
@@ -296,16 +304,38 @@ void _let::print(std::ostream &out){
 }
 
 void _let::pretty_print(std::ostream &out){
-    out<<"_let "<<_letVariable<<" = ";
-    rhs->pretty_print(out);
-    out<<"\n";
-    out<<"_in ";
-    body->pretty_print(out);
+    int pos = out.tellp();
+    out << "_let " << _letVariable << " = ";
+    rhs->pretty_print_at(out, prec_none
+                         , pos);
+    out << "\n";
+    pos = out.tellp();
+    out << "_in ";
+    body->pretty_print_at(out, prec_none, pos);
 
 };
-precedence_t _let::pretty_print_at(){
-    return prec_none;
-};
+
+void _let::pretty_print_at(std::ostream &out,precedence_t prec, int spaceNeed){
+    int currentPos = out.tellp();
+    if(prec == prec_add || prec == prec_mult){
+        out << "(";
+        currentPos++;
+    }
+    
+    out << "_let " << _letVariable << " = ";
+    rhs->pretty_print_at(out, prec_none, spaceNeed);
+    out <<"\n";
+    int newPos = out.tellp();
+    int space = currentPos - spaceNeed;
+    for( int i =0; i<space; i++){
+        out << " ";
+    }
+    out << "_in ";
+    this->body->pretty_print_at(out, prec_none, newPos);
+    if(prec == prec_add || prec == prec_mult){
+        out << ")";
+    }
+}
 
 //--------------------------------***Tests***--------------------------------
 
@@ -487,9 +517,9 @@ TEST_CASE("_let"){
              "_let a = 10\n"
              "_in a + 20");
         CHECK(to_string_pretty(new _let("a", new Num(10), new Add(new _let("b", new Num(20), new Add(new Var("b"), new Num(6))), new Var("a")))) ==
-              "_let x = 10\n"
-              "_in (_let y = 20\n"
-              "   _in y + 6) + x");
+              "_let a = 10\n"
+              "_in (_let b = 20\n"
+              "     _in b + 6) + a");
         CHECK(to_string_pretty(new Add(new Mult(new _let("x", new Num(10), new Var("x")), new Num(10)), new Num(20))) ==
                "(_let x = 10\n"
                " _in x) * 10 + 20");

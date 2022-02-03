@@ -14,8 +14,8 @@
 typedef enum {
   prec_none,      // = 0
   prec_add,       // = 1
-  prec_mult       // = 2
-  
+  prec_mult,      // = 2
+  prec_let        // = 3
 } precedence_t;
 
 class Expr{
@@ -26,7 +26,7 @@ public:
     virtual Expr* subst(std::string original, Expr* replacement)=0;
     virtual void print(std::ostream &out) = 0;
     virtual void pretty_print(std::ostream &out)=0;
-    virtual precedence_t pretty_print_at() = 0;
+    virtual void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed) = 0;
     static std::string to_string(Expr* e);
     static std::string to_string_pretty(Expr* e);
 };
@@ -42,7 +42,7 @@ public:
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
     void pretty_print(std::ostream &out);
-    precedence_t pretty_print_at();
+    void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed);
     
 };
 
@@ -58,7 +58,7 @@ public:
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
     void pretty_print(std::ostream &out);
-    precedence_t pretty_print_at();
+    void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed);
 };
 
 class Mult : public Expr {
@@ -73,7 +73,7 @@ public:
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
     void pretty_print(std::ostream &out);
-    precedence_t pretty_print_at();
+    void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed);
 };
 
 class Var : public Expr{
@@ -87,7 +87,7 @@ public:
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
     void pretty_print(std::ostream &out);
-    precedence_t pretty_print_at();
+    void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed);
 };
 
 
@@ -104,7 +104,7 @@ public:
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
     void pretty_print(std::ostream &out);
-    precedence_t pretty_print_at();
+    void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed);
 };
 
 #endif /* expr_hpp */
