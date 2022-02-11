@@ -158,13 +158,7 @@ static std::string parse_keyword(std::istream &in){
           string = string + character;
           c= in.peek();
       }
-      if(string == "let" || string =="in"){
-          return  string;
-      }
-      else{
-          throw std::runtime_error("invalid input");
-          return  string;
-      }
+    return string;
 }
 
 //parsing let
@@ -275,8 +269,10 @@ TEST_CASE("TESTS"){
                                     "(_in x + 10"),"invalid input");
         CHECK_THROWS_WITH(parse_str("_let x  1 * 10)"
                                     "_in x + 10"),"we need a = sign");
-        CHECK_THROWS_WITH(parse_str("_hi x  1 * 10)"
+        CHECK_THROWS_WITH(parse_str("_hi x = 1 * 10)"
                                     "_in x + 10"),"invalid input");
+        CHECK_THROWS_WITH(parse_str("_let x = 1 * 10)"
+                                    "_xxxx x + 10"),"invalid input");
 
 }
 
