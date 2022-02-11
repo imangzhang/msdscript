@@ -24,6 +24,19 @@ static std::string to_string_pretty(Expr* e){
     return o.str();
 };
 
+std::string Expr::to_string_cmd(){
+    std::stringstream ss;
+       this -> print(ss);
+       return ss.str();
+}
+    
+std::string Expr::to_pretty_string_cmd(){
+    std::stringstream ss;
+    this -> pretty_print(ss);
+    return ss.str();
+}
+
+
 //--------------------------------***Num***--------------------------------
 Num::Num(int val){
     this->val=val;
@@ -270,7 +283,7 @@ bool _let::equals(Expr *e){
     if(c == NULL){
         return false;
     }else{
-        return rhs->equals(c->rhs) && body->equals(c->body);
+        return rhs->equals(c->rhs) && body->equals(c->body)&& _letVariable == (c->_letVariable);
     }
 }
 

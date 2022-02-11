@@ -10,6 +10,8 @@
 #include <string>
 #include <iostream>
 #include "catch.h"
+#include "parse.hpp"
+#include "expr.hpp"
 
 //function of use_arguments
 //parameter: argc, argv
@@ -29,6 +31,7 @@ void use_arguments(int argc, char **argv){
                 if (Catch::Session().run() == 0){
                     std::cout<<"Tests passed."<<"\n";
                     testCount =true;
+                    exit(0);
                 }else{
                     std::cout<<"Tests failed."<<"\n";
                     exit(1);
@@ -37,6 +40,25 @@ void use_arguments(int argc, char **argv){
             else{std::cerr<<"error!"<<"\n"; //otherwise, it will warn an error
                 exit(1);
             }
+        }
+        else if(input=="--interp"){
+            Expr * e =parse(std::cin);
+            std::cout<<e->interp();
+            std::cout<<std::endl;
+            exit(0);
+            
+        }
+        else if(input=="--print"){
+            Expr * e = parse(std::cin);
+            std::cout <<e->to_string_cmd();
+            std::cout<<std::endl;
+            exit(0);
+            
+        }
+        else if(input=="--pretty-print"){
+            Expr * e = parse(std::cin);
+            std::cout<<e->to_pretty_string_cmd();
+            exit(0);
         }
         else{std::cout<<"This argument is not allowed!"<<"\n"; //anything else will be an error
         exit(1);

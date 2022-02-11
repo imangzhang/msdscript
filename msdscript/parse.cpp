@@ -105,6 +105,7 @@ Expr *parse_addend(std::istream &in){
       return e;
     }
 
+
 //Parsing muticand
 static Expr *parse_multicand(std::istream &in){
     skip_whitespcace(in);
@@ -122,9 +123,9 @@ static Expr *parse_multicand(std::istream &in){
       }else if(isalpha(c)){
           return parse_var(in);
       }
-//      else if(c == '_'){
-//          return parse_let(in);
-//      }
+      else if(c == '_'){
+          return parse_let(in);
+      }
       else {
         consume(in, c);
         throw std::runtime_error("invalid input");
@@ -137,7 +138,6 @@ static Expr *parse_var(std::istream &in){
     skip_whitespcace(in);
 
     std::string variable;
-
     int c=in.peek();
     while (isalpha(c)) {
         char character = in.get();
@@ -148,47 +148,58 @@ static Expr *parse_var(std::istream &in){
     return new Var(variable);
     
 }
-
-
-    static std::string parse_variable(std::istream &in, std::string sign){
-        std::string s =sign;
-        int c=in.peek();
-        while (isalpha(c)) {
-            char character = in.get();
-            s =s+character;
-            skip_whitespcace(in);
-            c = in.peek();
-        }
-        return s;
-    }
-
 //parse keyword
-    static std::string parse_keyword(std::istream &in){
-    in.get();
-    return parse_variable(in, "_");
+static std::string parse_keyword(std::istream &in){
+      consume(in, '_');
+      std::string string;;
+      int c = in.peek();
+      while(isalpha(c)){
+         char character = in.get();
+          string = string + character;
+          c= in.peek();
+      }
+      if(string == "let" || string =="in"){
+          return  string;
+      }
+      else{
+          throw std::runtime_error("invalid input");
+          return  string;
+      }
 }
- 
-    
 
 //parsing let
 //grammer:  _let<variable> = <expr>_in<expr>
-
 static Expr *parse_let(std::istream &in){
-    
-    skip_whitespcace(in);
-    std::string name = parse_variable(in, "");
-    char c = in.get();
-    skip_whitespcace(in);
-    Expr* expr = parse_expr(in);
-    skip_whitespcace(in);
-    std::string keyword = parse_keyword(in);
-    skip_whitespcace(in);
-    Expr* expr2 = parse_expr(in);
-
-    Expr* let = new _let(name,expr,expr2);
-    return let;
-    
-   
+        int c = in.peek();
+            if(c == '_'){
+                parse_keyword(in);
+            }else{
+                throw std::runtime_error("invalid input");
+            }
+       std::string s;
+       Expr *var = parse_var(in);
+       Var* v = dynamic_cast<Var *>(var);
+       s+=v->variable;
+        c = in.peek();
+           if(c == '='){
+               consume(in, c);
+           }
+           else{
+               throw std::runtime_error("we need a = sign");
+           }
+        Expr* expr1;
+        Expr* expr2;    
+        expr1 = parse_expr(in);
+        c = in.peek();
+           if(c == '_'){
+               parse_keyword(in);
+           }
+           else{
+               throw std::runtime_error("invalid input");
+           }
+        expr2 = parse_expr(in);
+        return new _let(s, expr1, expr2);
+        
 }
 
 TEST_CASE("TESTS"){
@@ -242,7 +253,7 @@ TEST_CASE("TESTS"){
           ->equals(new _let("x",new Num(10), new Add(new Var("x"), new Num(10)))));
         CHECK(parse_str("_let x = 10"
               "_in x * 10")
-            ->equals(new _let("x",new Num(3), new Mult(new Var("x"), new Num(3)))));
+            ->equals(new _let("x",new Num(10), new Mult(new Var("x"), new Num(10)))));
         CHECK(parse_str("_let x = 10"
               "_in xyz")->equals(new _let("x",new Num(10), new Var("xyz"))));
      
@@ -253,6 +264,20 @@ TEST_CASE("TESTS"){
         CHECK(parse_str("10 * _let x = 20\n"
                 "_in x + 30")
             ->equals(new Mult(new Num(10), new _let("x", new Num(20), new Add(new Var("x"), new Num(30))))));
+    
+        CHECK_THROWS_WITH(parse_str("_let x = a 10"
+                                    "_in x + 10"),"invalid input");
+        CHECK_THROWS_WITH(parse_str("_let x = 10"
+                                    "_in x+(x + 10"),"missing close parenthesis");
+        CHECK_THROWS_WITH(parse_str("_let x =+ 10"
+                                    "_in x + 10"),"invalid input");
+        CHECK_THROWS_WITH(parse_str("_let x = 1 * a + 10)"
+                                    "(_in x + 10"),"invalid input");
+        CHECK_THROWS_WITH(parse_str("_let x  1 * 10)"
+                                    "_in x + 10"),"we need a = sign");
+        CHECK_THROWS_WITH(parse_str("_hi x  1 * 10)"
+                                    "_in x + 10"),"invalid input");
+
 }
 
 

@@ -29,6 +29,8 @@ public:
     virtual void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed) = 0;
     static std::string to_string(Expr* e);
     static std::string to_string_pretty(Expr* e);
+    std::string to_string_cmd();
+    std::string to_pretty_string_cmd();
 };
 
 class Num : public Expr {
