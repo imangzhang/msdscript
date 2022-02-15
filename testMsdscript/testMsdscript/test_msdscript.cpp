@@ -18,10 +18,10 @@ std::string random_expr_string(){
     int randNum = rand() % 100;
 
     //20% for each of number, variable(3% for x, 3% for y, and 4% for rest), plus, mutilple and let
-    if(randNum <20){
+    if(randNum <35){
         return std::to_string(rand());
     }
-    else if( randNum >=20 && randNum < 40){
+    else if( randNum >=35 && randNum < 70){
         int varRand = rand() % 10;
         if(varRand <3){
             return "x";
@@ -35,10 +35,10 @@ std::string random_expr_string(){
             return var;
         }
     }
-    else if (randNum >40 && randNum <= 60){
+    else if (randNum >= 70 && randNum < 80){
         return random_expr_string() + "+" + random_expr_string();
     }
-    else if(randNum >60 && randNum<=80 ){
+    else if(randNum >= 80 && randNum< 90 ){
         return random_expr_string() + "*" + random_expr_string();
     }else{
         std::string word ="";
