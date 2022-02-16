@@ -72,7 +72,7 @@ Expr *parse_num(std::istream &in){
     if(negative){
         n = -n;
     }
-    return new Num(n);
+    return new NumExpr(n);
 }
 
 
@@ -86,7 +86,7 @@ Expr *parse_expr(std::istream &in){
     if (c == '+') {
       consume(in, '+');
       Expr *rhs = parse_expr(in);
-      return new Add(e, rhs);
+      return new AddExpr(e, rhs);
     } else
       return e;
     }
@@ -100,7 +100,7 @@ Expr *parse_addend(std::istream &in){
     if (c == '*') {
       consume(in, '*');
       Expr *rhs = parse_addend(in);
-      return new Mult(e, rhs);
+      return new MultExpr(e, rhs);
     } else
       return e;
     }
@@ -145,7 +145,7 @@ static Expr *parse_var(std::istream &in){
         skip_whitespcace(in);
         c = in.peek();
     }
-    return new Var(variable);
+    return new VarExpr(variable);
     
 }
 //parse keyword
@@ -172,7 +172,7 @@ static Expr *parse_let(std::istream &in){
             }
        std::string s;
        Expr *var = parse_var(in);
-       Var* v = dynamic_cast<Var *>(var);
+    VarExpr* v = dynamic_cast<VarExpr *>(var);
        s+=v->variable;
         c = in.peek();
            if(c == '='){
@@ -192,72 +192,72 @@ static Expr *parse_let(std::istream &in){
                throw std::runtime_error("invalid input");
            }
         expr2 = parse_expr(in);
-        return new _let(s, expr1, expr2);
+        return new _letExpr(s, expr1, expr2);
         
 }
 
 TEST_CASE("TESTS"){
     SECTION("NUMBER")
         CHECK( parse_str("1")
-              ->equals(new Num(1)));
+              ->equals(new NumExpr(1)));
         CHECK( parse_str("(1)")
-              ->equals(new Num(1)));
+              ->equals(new NumExpr(1)));
         CHECK( parse_str("-1")
-              ->equals(new Num(-1)));
+              ->equals(new NumExpr(-1)));
     
     SECTION("ADD")
         CHECK( parse_str("10+-20")
-              ->equals(new Add(new Num(10), new Num(-20))));
+              ->equals(new AddExpr(new NumExpr(10), new NumExpr(-20))));
         CHECK( parse_str("10  +   -20")
-          ->equals(new Add(new Num(10), new Num(-20))));
+          ->equals(new AddExpr(new NumExpr(10), new NumExpr(-20))));
         CHECK( parse_str("(5+1)")
-              ->equals(new Add(new Num(5), new Num(1))));
+              ->equals(new AddExpr(new NumExpr(5), new NumExpr(1))));
         CHECK( parse_str("(20)+10")
-              ->equals(new Add(new Num(20), new Num(10))));
+              ->equals(new AddExpr(new NumExpr(20), new NumExpr(10))));
         CHECK( parse_str("10+(20)")
-              ->equals(new Add(new Num(10), new Num(20))));
+              ->equals(new AddExpr(new NumExpr(10), new NumExpr(20))));
         CHECK( parse_str("    10+(  20   )")
-              ->equals(new Add(new Num(10), new Num(20))));
+              ->equals(new AddExpr(new NumExpr(10), new NumExpr(20))));
     
     SECTION("VAR")
-        CHECK(parse_str("apple")->equals(new Var("apple")));
-        CHECK(parse_str("  apple")->equals(new Var("apple")));
-        CHECK(parse_str(" apple")->equals(new Var("apple")));
-        CHECK(parse_str("   apple  ")->equals(new Var("apple")));
+        CHECK(parse_str("apple")->equals(new VarExpr("apple")));
+        CHECK(parse_str("  apple")->equals(new VarExpr("apple")));
+        CHECK(parse_str(" apple")->equals(new VarExpr("apple")));
+        CHECK(parse_str("   apple  ")->equals(new VarExpr("apple")));
     
     SECTION("MUTIPLICATION")
         CHECK( parse_str ("10+20*60")
-              ->equals(new Add(new Num(10),new Mult(new Num(20), new Num(60)))));
+              ->equals(new AddExpr(new NumExpr(10),new MultExpr(new NumExpr(20), new NumExpr(60)))));
         CHECK( parse_str ("60*20+10")
-              ->equals(new Add(new Mult(new Num(60), new Num(20)),new Num(10))));
+              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
         CHECK( parse_str ("60*    20  +    10")
-              ->equals(new Add(new Mult(new Num(60), new Num(20)),new Num(10))));
+              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
         CHECK( parse_str ("60*20+10")
-              ->equals(new Add(new Mult(new Num(60), new Num(20)),new Num(10))));
+              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
         CHECK( parse_str ("60*(20+10)")
-              ->equals(new Mult(new Num(60),new Add(new Num(20), new Num(10)))));
+              ->equals(new MultExpr(new NumExpr(60),new AddExpr(new NumExpr(20), new NumExpr(10)))));
         CHECK( parse_str ("(60+40)*(20+10)")
-              ->equals(new Mult(new Add(new Num(60), new Num(40)),new Add(new Num(20), new Num(10)))));
+              ->equals(new MultExpr(new AddExpr(new NumExpr(60), new NumExpr(40)),new AddExpr(new NumExpr(20), new NumExpr(10)))));
         CHECK( parse_str ("(60+40)*(20+10)+100")
-              ->equals(new Add(new Mult(new Add(new Num(60), new Num(40)),new Add(new Num(20), new Num(10))),new Num(100))));
+              ->equals(new AddExpr(new MultExpr(new AddExpr(new NumExpr(60), new NumExpr(40)),new AddExpr(new NumExpr(20), new NumExpr(10))),new NumExpr(100))));
 
     SECTION("_let")
         CHECK(parse_str("_let x = 10"
                     "_in x + 10")
-          ->equals(new _let("x",new Num(10), new Add(new Var("x"), new Num(10)))));
+          ->equals(new _letExpr("x",new NumExpr(10), new AddExpr(new VarExpr("x"), new NumExpr(10)))));
         CHECK(parse_str("_let x = 10"
               "_in x * 10")
-            ->equals(new _let("x",new Num(10), new Mult(new Var("x"), new Num(10)))));
+            ->equals(new _letExpr("x",new NumExpr(10), new MultExpr(new VarExpr("x"), new NumExpr(10)))));
         CHECK(parse_str("_let x = 10"
-              "_in xyz")->equals(new _let("x",new Num(10), new Var("xyz"))));
+              "_in xyz")->equals(new _letExpr("x",new NumExpr(10), new VarExpr("xyz"))));
      
         CHECK(parse_str("_let x = 10\n"
               "_in (_let y = 20\n"
                  "_in y + 30) + x")
-            ->equals(new _let("x", new Num(10), new Add(new _let("y", new Num(20), new Add(new Var("y"), new Num(30))), new Var("x")))));
+            ->equals(new _letExpr("x", new NumExpr(10), new AddExpr(new _letExpr("y", new NumExpr(20), new AddExpr(new VarExpr("y"), new NumExpr(30))), new VarExpr("x")))));
         CHECK(parse_str("10 * _let x = 20\n"
                 "_in x + 30")
-            ->equals(new Mult(new Num(10), new _let("x", new Num(20), new Add(new Var("x"), new Num(30))))));
+            ->equals(new MultExpr(new NumExpr(10), new _letExpr("x", new NumExpr(20), new AddExpr(new VarExpr("x"), new NumExpr(30))))));
     
         CHECK_THROWS_WITH(parse_str("_let x = a 10"
                                     "_in x + 10"),"invalid input");

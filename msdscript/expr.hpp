@@ -11,6 +11,9 @@
 #include <stdio.h>
 #include <string>
 
+class Val; //declaration of calss Val so that declaration of
+            //Expr::interp can refer to Val*
+
 typedef enum {
   prec_none,      // = 0
   prec_add,       // = 1
@@ -21,7 +24,7 @@ typedef enum {
 class Expr{
 public:
     virtual bool equals(Expr *e) = 0;
-    virtual int interp()=0;
+    virtual Val* interp()=0;
     virtual bool has_variable()=0;
     virtual Expr* subst(std::string original, Expr* replacement)=0;
     virtual void print(std::ostream &out) = 0;
@@ -33,13 +36,22 @@ public:
     std::string to_pretty_string_cmd();
 };
 
-class Num : public Expr {
+//subclass
+//class NumExpr : public Expr{
+//    int rep;
+//    NumExpr(int rep){
+//        this->rep =rep;
+//    }
+//};
+
+class NumExpr : public Expr {
 public:
     int val;
     
-    Num(int val);
+    NumExpr(int val);
+
     bool equals(Expr *e);
-    int interp();
+    Val* interp();
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
@@ -48,14 +60,14 @@ public:
     
 };
 
-class Add : public Expr {
+class AddExpr : public Expr {
 public:
     Expr *lhs;
     Expr *rhs;
     
-    Add(Expr *lhs, Expr *rhs);
+    AddExpr(Expr *lhs, Expr *rhs);
     bool equals(Expr *e);
-    int interp();
+    Val* interp();
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
@@ -63,14 +75,14 @@ public:
     void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed);
 };
 
-class Mult : public Expr {
+class MultExpr : public Expr {
 public:
     Expr *lhs;
     Expr *rhs;
     
-    Mult(Expr *lhs, Expr *rhs);
+    MultExpr(Expr *lhs, Expr *rhs);
     bool equals(Expr *e);
-    int interp();
+    Val* interp();
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
@@ -78,13 +90,13 @@ public:
     void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed);
 };
 
-class Var : public Expr{
+class VarExpr : public Expr{
 public:
     std::string variable;
     
-    Var(std::string variable);
+    VarExpr(std::string variable);
     bool equals(Expr *e);
-    int interp();
+    Val* interp();
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
@@ -93,15 +105,15 @@ public:
 };
 
 
-class _let : public Expr{
+class _letExpr : public Expr{
 public:
     std::string _letVariable;
     Expr *rhs;
     Expr *body;
     
-    _let(std::string _letVariable, Expr *rhs, Expr *body);
+    _letExpr(std::string _letVariable, Expr *rhs, Expr *body);
     bool equals(Expr *e);
-    int interp();
+    Val* interp();
     bool has_variable();
     Expr* subst(std::string original, Expr* replacement);
     void print(std::ostream &out);
