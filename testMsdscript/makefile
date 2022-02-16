@@ -1,20 +1,2 @@
-INCS = exec.h test_msdscript.hpp test_Cmdline.hpp
-
-OBJS = main.o exec.o test_msdscript.o test_Cmdline.o
-
-CXXFLAGS = --std=c++14 -O2
-
-test_msdscript: $(OBJS)
-	$(CXX) $(CXXFLAGS) -o test_msdscript $(OBJS)
-
-main.o: main.cpp $(INCS)
-	$(CXX) $(CXXFLAGS) -c $<
-
-exec.o: exec.cpp $(INCS)
-	$(CXX) $(CXXFLAGS) -c $<
-
-test_msdscript.o: test_msdscript.cpp $(INCS)
-	$(CXX) $(CXXFLAGS) -c $<
-	
-test_Cmdline.o: test_Cmdline.cpp $(INCS)
-	$(CXX) $(CXXFLAGS) -c $<
+test_msdscript: main.cpp test_msdscript.cpp test_msdscript.hpp exec.cpp exec.h test_Cmdline.hpp test_Cmdline.cpp
+	c++ --std=c++14 -O2 -o test_msdscript main.cpp test_msdscript.cpp exec.cpp test_Cmdline.cpp
