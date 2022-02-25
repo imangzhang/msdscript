@@ -121,4 +121,49 @@ public:
     void pretty_print_at(std::ostream &out, precedence_t prec, int spaceNeed);
 };
 
+class EqualExpr : public Expr {
+public:
+  Expr *lhs;
+  Expr *rhs;
+   
+  EqualExpr(Expr *lhs, Expr *rhs);
+  bool equals(Expr *e);
+  Val* interp();
+  bool has_variable();
+  Expr* subst(std::string str, Expr *e);
+  void print(std::ostream &out);
+  void pretty_print(std::ostream &out);
+  void pretty_print_at(std::ostream &out, precedence_t prec, int space);
+};
+
+class BoolExpr : public Expr {
+public:
+  bool boolean;
+   
+  BoolExpr(bool val);
+  bool equals(Expr *e);
+  Val* interp();
+  bool has_variable();
+  Expr* subst(std::string str, Expr *e);
+  void print(std::ostream &out);
+  void pretty_print(std::ostream &out);
+  void pretty_print_at(std::ostream &out, precedence_t prec, int space);
+};
+
+class IfExpr : public Expr {
+public:
+  Expr *_if;
+  Expr *_then;
+  Expr *_else;
+   
+  IfExpr(Expr *_if, Expr *_then, Expr *_else);
+  bool equals(Expr *e);
+  Val* interp();
+  bool has_variable();
+  Expr* subst(std::string str, Expr *e);
+  void print(std::ostream &out);
+  void pretty_print(std::ostream &out);
+  void pretty_print_at(std::ostream &out, precedence_t prec, int space);
+};
+
 #endif /* expr_hpp */
