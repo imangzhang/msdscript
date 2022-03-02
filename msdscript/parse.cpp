@@ -126,12 +126,13 @@ Expr *parse_addend(std::istream &in){
       consume(in, '*');
       Expr *rhs = parse_addend(in);
       return new MultExpr(e, rhs);
-    } else
+    } else{
       return e;
     }
+}
 
 //Parsing muticand
- Expr *parse_multicand(std::istream &in){
+ Expr *parse_inner(std::istream &in){
     skip_whitespcace(in);
       int c = in.peek();
       if ((c == '-') || isdigit(c))
@@ -155,6 +156,18 @@ Expr *parse_addend(std::istream &in){
         consume(in, c);
         throw std::runtime_error("invalid input");
       }
+}
+
+Expr *parse_multicand(std::istream &in){
+    Expr *expr = parse_inner(in);
+    while(in.peek() == '('){
+        consume(in, '(');
+        Expr *actual_arg = parse_expr(in);
+        consume(in, ')');
+        expr = new (CallExpr)(expr, actual_arg);
+        
+    }
+    return expr;
 }
 
 //parse var
@@ -224,6 +237,9 @@ Expr* parse_keyword(std::istream &in){
     }
     else if(keyword ->to_string_cmd() =="false"){
         return new BoolExpr("_false");
+    }else if(keyword->to_string_cmd() == "fun"){
+        Expr *funExpr = parse_fun(in);
+        return funExpr;
     }
     else{
         throw std::runtime_error("invalid keyword");
@@ -256,7 +272,20 @@ Expr *parse_let(std::istream &in){
       return new _letExpr(lhsStr, rhs, body);
     }
 
-  
+Expr *parse_fun(std::istream &in){
+    
+    std::string formal_arg_str;
+    Expr *formal_arg;
+    Expr *body;
+        
+    consume(in, '(');
+    formal_arg = parse_var(in);
+    VarExpr* varExpr = dynamic_cast<VarExpr *>(formal_arg);
+    formal_arg_str += varExpr->variable;
+    consume(in, ')');
+    body = parse_expr(in);
+    return new FunExpr(formal_arg_str, body);
+}
 
 //****----------------------------------------TESTS----------------------------------------
 
@@ -347,6 +376,11 @@ TEST_CASE("TESTS"){
          CHECK( parse_str("_if a _then b _else (c)")
                -> equals (new IfExpr(new VarExpr("a"), new VarExpr("b"), new VarExpr("c"))) );
     CHECK(parse_str("1 == 1")->equals(new EqualExpr(new NumExpr(1), new NumExpr(1))));
+    
+    CHECK(parse_str("_fun (x) (x+10)")-> equals(new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))) );
+       
+      CHECK(parse_str("x(10)") -> equals(new CallExpr(new VarExpr("x"), new NumExpr(10))));
+    
     
 SECTION("ERROR TESTS")
     CHECK_THROWS_WITH(parse_str("- 1"),"Dangling negative.");

@@ -12,6 +12,7 @@
 #include "catch.h"
 #include "parse.hpp"
 #include "expr.hpp"
+#include "Val.hpp"
 
 //function of use_arguments
 //parameter: argc, argv
@@ -43,7 +44,7 @@ void use_arguments(int argc, char **argv){
         }
         else if(input=="--interp"){
             Expr * e =parse(std::cin);
-            std::cout<<e->interp();
+            std::cout<<e->interp()->to_string();
             std::cout<<std::endl;
             exit(0);
             

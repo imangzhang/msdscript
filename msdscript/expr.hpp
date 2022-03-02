@@ -166,4 +166,35 @@ public:
   void pretty_print_at(std::ostream &out, precedence_t prec, int space);
 };
 
+class FunExpr : public Expr{
+public:
+    std::string formal_arg;
+    Expr *body;
+    
+    FunExpr(std::string formal_arg, Expr *body);
+    bool equals(Expr *e);
+    Val* interp();
+    bool has_variable();
+    Expr* subst(std::string str, Expr *e);
+    void print(std::ostream &out);
+    void pretty_print(std::ostream &out);
+    void pretty_print_at(std::ostream &out, precedence_t prec, int space);
+    
+};
+
+class CallExpr : public Expr{
+public:
+    Expr* to_be_called;
+    Expr* actual_arg;
+    
+    CallExpr(Expr *to_be_called, Expr *actual_arg);
+    bool equals(Expr *e);
+    Val* interp();
+    bool has_variable();
+    Expr* subst(std::string str, Expr *e);
+    void print(std::ostream &out);
+    void pretty_print(std::ostream &out);
+    void pretty_print_at(std::ostream &out, precedence_t prec, int space);
+};
+
 #endif /* expr_hpp */

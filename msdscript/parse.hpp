@@ -28,5 +28,8 @@ std::string parse_variable(std::istream &in, std::string sign);
 Expr *parse_if(std::istream &in);
 Expr *parse_comparg(std::istream &in);
 Expr *parse_muli(std::istream &in);
+Expr *parse_fun(std::istream &in);
+Expr *parse_inner(std::istream &in);
+Expr *parse_fun(std::istream &in);
 
 #endif /* parse_hpp */
