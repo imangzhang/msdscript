@@ -43,21 +43,21 @@ void use_arguments(int argc, char **argv){
             }
         }
         else if(input=="--interp"){
-            Expr * e =parse(std::cin);
+            PTR(Expr) e =parse(std::cin);
             std::cout<<e->interp()->to_string();
             std::cout<<std::endl;
             exit(0);
             
         }
         else if(input=="--print"){
-            Expr * e = parse(std::cin);
+            PTR(Expr) e = parse(std::cin);
             std::cout <<e->to_string_cmd();
             std::cout<<std::endl;
             exit(0);
             
         }
         else if(input=="--pretty-print"){
-            Expr * e = parse(std::cin);
+            PTR(Expr) e = parse(std::cin);
             std::cout<<e->to_pretty_string_cmd();
             exit(0);
         }
