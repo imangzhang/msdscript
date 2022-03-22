@@ -135,7 +135,8 @@ PTR(Expr) FunVal::to_expr(){
 }
 
 PTR(Val) FunVal::call(PTR(Val) actual_arg){
-    return (this->body->subst(this->formal_arg,actual_arg->to_expr()))->interp();
+    //return (this->body->subst(this->formal_arg,actual_arg->to_expr()))->interp();
+    return this->body->interp(NEW(ExtendedEnv)(formal_arg,actual_arg,env));
 }
 
 //-------------------------------------TESTS-----------------------------------------

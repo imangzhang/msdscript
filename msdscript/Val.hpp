@@ -11,8 +11,10 @@
 #include <iostream>
 #include <stdio.h>
 #include "pointer.h"
+#include "env.hpp"
 
 class Expr; //declaration class Expr to allow Val::to_expr's return to be Expr*
+//class env;
 
 CLASS(Val) {
 public:
@@ -54,6 +56,7 @@ class FunVal:public Val{
 public:
     std::string formal_arg;
     PTR(Expr) body;
+    PTR(Env) env;
     FunVal(std::string formal_arg, PTR(Expr) body);
     bool equals(PTR(Val) other);
     PTR(Val) add_to(PTR(Val) other_val);

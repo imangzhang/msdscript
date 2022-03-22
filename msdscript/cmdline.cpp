@@ -44,7 +44,7 @@ void use_arguments(int argc, char **argv){
         }
         else if(input=="--interp"){
             PTR(Expr) e =parse(std::cin);
-            std::cout<<e->interp()->to_string();
+            std::cout<<e->interp(Env::empty)->to_string();
             std::cout<<std::endl;
             exit(0);
             
