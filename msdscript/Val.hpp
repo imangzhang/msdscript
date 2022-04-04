@@ -57,7 +57,8 @@ public:
     std::string formal_arg;
     PTR(Expr) body;
     PTR(Env) env;
-    FunVal(std::string formal_arg, PTR(Expr) body);
+    
+    FunVal(std::string formal_arg, PTR(Expr) body, PTR(Env) env);
     bool equals(PTR(Val) other);
     PTR(Val) add_to(PTR(Val) other_val);
     PTR(Val) mult_to(PTR(Val) other_val);

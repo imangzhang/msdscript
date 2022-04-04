@@ -11,6 +11,7 @@
 #include <sstream>
 #include <iostream>
 #include "Val.hpp"
+#include "parse.hpp"
 
 //methods of to-string
 static std::string to_string(PTR(Expr) e){
@@ -526,7 +527,7 @@ bool FunExpr::equals(PTR(Expr) e){
 }
 
 PTR(Val) FunExpr::interp(PTR(Env) env){
-    return NEW (FunVal)(this->formal_arg,this->body);
+    return NEW (FunVal)(this->formal_arg,this->body, env);
 }
 
 void FunExpr::print(std::ostream &out){
@@ -607,84 +608,84 @@ void CallExpr::pretty_print_at(std::ostream &out, precedence_t prec, int space){
 
 //--------------------------------***Tests***--------------------------------
 
-//TEST_CASE("print") {
-//    CHECK(to_string(new NumExpr(100)) == "100");
-//    CHECK(to_string(new VarExpr("xyz")) == "xyz");
-//    CHECK(to_string(new VarExpr("abc")) != "xyz");
-//    CHECK(to_string((new AddExpr((new NumExpr(10)), (new NumExpr(20))))) == "(10+20)");
-//    CHECK(to_string((new MultExpr((new NumExpr(10)), (new NumExpr(20))))) == "(10*20)");
-//    CHECK(to_string((new AddExpr(new NumExpr(1), new AddExpr(new NumExpr(2), new NumExpr(3))))) == "(1+(2+3))");
-//    CHECK(to_string((new AddExpr(new AddExpr(new NumExpr(1), new NumExpr(2)), new NumExpr(3)))) == "((1+2)+3)");
-//}
-//
-//TEST_CASE("pretty_print") {
-//    CHECK(to_string_pretty(new NumExpr(10)) == "10");
-//    CHECK(to_string_pretty(new VarExpr("xyz")) == "xyz");
-//    CHECK(to_string_pretty((new AddExpr((new NumExpr(10)), (new NumExpr(20))))) == "10 + 20");
-//    CHECK(to_string_pretty((new MultExpr((new NumExpr(10)), (new NumExpr(20))))) == "10 * 20");
-//    CHECK(to_string_pretty(new AddExpr(new NumExpr(1), new MultExpr(new NumExpr(2), new NumExpr(3)))) == "1 + 2 * 3");
-//    CHECK(to_string_pretty(new MultExpr(new NumExpr(1), new AddExpr(new NumExpr(2), new NumExpr(3)))) == "1 * (2 + 3)");
-//    CHECK(to_string_pretty(new AddExpr(new MultExpr(new NumExpr(1),new NumExpr(2)), new NumExpr(3))) == "1 * 2 + 3");
-//    CHECK(to_string_pretty(new MultExpr(new MultExpr(new NumExpr(2), new NumExpr(3)), new NumExpr(4))) == "(2 * 3) * 4");
-//    CHECK(to_string_pretty(new MultExpr(new NumExpr(2), new MultExpr(new NumExpr(3), new NumExpr(4)))) == "2 * 3 * 4");
-//}
-//
-//
-//TEST_CASE("equals"){
-//    SECTION("Num"){
-//        CHECK( (new NumExpr(1))->equals(new NumExpr(1)));
-//        CHECK( (new NumExpr(1010))->equals(new NumExpr(1010)));
-//        CHECK( ! (new NumExpr(1))->equals(new NumExpr(2)));
-//        CHECK( ! (new NumExpr(1))->equals(new VarExpr("b")));
-//        CHECK( ! (new NumExpr(1))->equals((new AddExpr(new NumExpr(2), new NumExpr(1)))) );
-//        CHECK( ! (new NumExpr(1))->equals((new MultExpr(new NumExpr(2), new NumExpr(3)))) );
-//
-//
-//    }
-//
-//    SECTION("Add"){
-//        CHECK((new AddExpr(new NumExpr(1), new NumExpr(2)))
-//              ->equals(new AddExpr(new NumExpr(1), new NumExpr(2))));
-//        CHECK(! (new AddExpr(new NumExpr(1), new NumExpr(2)))
-//              ->equals(new AddExpr(new NumExpr(2),new NumExpr(1))));
-//        CHECK(! (new AddExpr(new NumExpr(10), new NumExpr(20)))
-//              ->equals(new AddExpr(new NumExpr(2),new NumExpr(2))));
-//        CHECK(! (new AddExpr(new NumExpr(100), new NumExpr(1)))
-//              ->equals(new NumExpr(33)));
-//    }
-//
-//    SECTION("Mult"){
-//        CHECK( (new MultExpr(new NumExpr(1), new NumExpr(2)))->equals(new MultExpr(new NumExpr(1),new NumExpr(2))));
-//        CHECK(!(new MultExpr(new NumExpr(10), new NumExpr(10)))->equals(new AddExpr(new NumExpr(10),new NumExpr(10))));
-//        CHECK(! (new MultExpr(new NumExpr(2), new NumExpr(4)))
-//              ->equals(new MultExpr(new NumExpr(4),new NumExpr(4))));
-//        CHECK(! (new MultExpr(new NumExpr(10), new NumExpr(1)))
-//              ->equals(new NumExpr(99)));
-//    }
-//
-//    SECTION("Var"){
-//        CHECK( (new VarExpr("a"))->equals(new VarExpr("a")));
-//        CHECK(! (new VarExpr("a"))->equals(new VarExpr("b")));
-//        CHECK(! (new VarExpr("a"))->equals(new VarExpr("abd")));
-//        CHECK(! (new VarExpr("a"))->equals(new NumExpr(1)));
-//    }
-//
-//
-//    SECTION("interp") {
-//        CHECK((new NumExpr(9))->interp() ->equals(new NumVal(9)));
-//        CHECK(!(new NumExpr(19))->interp() ->equals( new NumVal(1)));
-//        CHECK((new AddExpr((new NumExpr(100)), (new NumExpr(100))))->interp() ->equals( new NumVal(200)));
-//        CHECK((new MultExpr((new NumExpr(12)), (new NumExpr(2))))->interp() ->equals( new NumVal(24)));
-//        CHECK(!(new MultExpr((new NumExpr(1)), (new NumExpr(1))))->interp() ->equals( new NumVal(3)));
-//        CHECK_THROWS_WITH((new VarExpr("x"))
-//                          ->interp(), "This is not a integer!");
-//        CHECK_THROWS_WITH((new AddExpr((new VarExpr("xyz")), (new VarExpr("abc"))))
-//                          ->interp(), "This is not a integer!");
-//        CHECK_THROWS_WITH((new MultExpr((new VarExpr("hello")), (new NumExpr(1000))))
-//                          ->interp(), "This is not a integer!");
-//    }
-//
-//
+TEST_CASE("print") {
+    CHECK(to_string(new NumExpr(100)) == "100");
+    CHECK(to_string(new VarExpr("xyz")) == "xyz");
+    CHECK(to_string(new VarExpr("abc")) != "xyz");
+    CHECK(to_string((new AddExpr((new NumExpr(10)), (new NumExpr(20))))) == "(10+20)");
+    CHECK(to_string((new MultExpr((new NumExpr(10)), (new NumExpr(20))))) == "(10*20)");
+    CHECK(to_string((new AddExpr(new NumExpr(1), new AddExpr(new NumExpr(2), new NumExpr(3))))) == "(1+(2+3))");
+    CHECK(to_string((new AddExpr(new AddExpr(new NumExpr(1), new NumExpr(2)), new NumExpr(3)))) == "((1+2)+3)");
+}
+
+TEST_CASE("pretty_print") {
+    CHECK(to_string_pretty(new NumExpr(10)) == "10");
+    CHECK(to_string_pretty(new VarExpr("xyz")) == "xyz");
+    CHECK(to_string_pretty((new AddExpr((new NumExpr(10)), (new NumExpr(20))))) == "10 + 20");
+    CHECK(to_string_pretty((new MultExpr((new NumExpr(10)), (new NumExpr(20))))) == "10 * 20");
+    CHECK(to_string_pretty(new AddExpr(new NumExpr(1), new MultExpr(new NumExpr(2), new NumExpr(3)))) == "1 + 2 * 3");
+    CHECK(to_string_pretty(new MultExpr(new NumExpr(1), new AddExpr(new NumExpr(2), new NumExpr(3)))) == "1 * (2 + 3)");
+    CHECK(to_string_pretty(new AddExpr(new MultExpr(new NumExpr(1),new NumExpr(2)), new NumExpr(3))) == "1 * 2 + 3");
+    CHECK(to_string_pretty(new MultExpr(new MultExpr(new NumExpr(2), new NumExpr(3)), new NumExpr(4))) == "(2 * 3) * 4");
+    CHECK(to_string_pretty(new MultExpr(new NumExpr(2), new MultExpr(new NumExpr(3), new NumExpr(4)))) == "2 * 3 * 4");
+}
+
+
+TEST_CASE("equals"){
+    SECTION("Num"){
+        CHECK( (new NumExpr(1))->equals(new NumExpr(1)));
+        CHECK( (new NumExpr(1010))->equals(new NumExpr(1010)));
+        CHECK( ! (new NumExpr(1))->equals(new NumExpr(2)));
+        CHECK( ! (new NumExpr(1))->equals(new VarExpr("b")));
+        CHECK( ! (new NumExpr(1))->equals((new AddExpr(new NumExpr(2), new NumExpr(1)))) );
+        CHECK( ! (new NumExpr(1))->equals((new MultExpr(new NumExpr(2), new NumExpr(3)))) );
+
+
+    }
+
+    SECTION("Add"){
+        CHECK((new AddExpr(new NumExpr(1), new NumExpr(2)))
+              ->equals(new AddExpr(new NumExpr(1), new NumExpr(2))));
+        CHECK(! (new AddExpr(new NumExpr(1), new NumExpr(2)))
+              ->equals(new AddExpr(new NumExpr(2),new NumExpr(1))));
+        CHECK(! (new AddExpr(new NumExpr(10), new NumExpr(20)))
+              ->equals(new AddExpr(new NumExpr(2),new NumExpr(2))));
+        CHECK(! (new AddExpr(new NumExpr(100), new NumExpr(1)))
+              ->equals(new NumExpr(33)));
+    }
+
+    SECTION("Mult"){
+        CHECK( (new MultExpr(new NumExpr(1), new NumExpr(2)))->equals(new MultExpr(new NumExpr(1),new NumExpr(2))));
+        CHECK(!(new MultExpr(new NumExpr(10), new NumExpr(10)))->equals(new AddExpr(new NumExpr(10),new NumExpr(10))));
+        CHECK(! (new MultExpr(new NumExpr(2), new NumExpr(4)))
+              ->equals(new MultExpr(new NumExpr(4),new NumExpr(4))));
+        CHECK(! (new MultExpr(new NumExpr(10), new NumExpr(1)))
+              ->equals(new NumExpr(99)));
+    }
+
+    SECTION("Var"){
+        CHECK( (new VarExpr("a"))->equals(new VarExpr("a")));
+        CHECK(! (new VarExpr("a"))->equals(new VarExpr("b")));
+        CHECK(! (new VarExpr("a"))->equals(new VarExpr("abd")));
+        CHECK(! (new VarExpr("a"))->equals(new NumExpr(1)));
+    }
+
+
+    SECTION("interp") {
+        CHECK((new NumExpr(9))->interp(Env::empty) ->equals(new NumVal(9)));
+        CHECK(!(new NumExpr(19))->interp(Env::empty) ->equals( new NumVal(1)));
+        CHECK((new AddExpr((new NumExpr(100)), (new NumExpr(100))))->interp(Env::empty) ->equals( new NumVal(200)));
+        CHECK((new MultExpr((new NumExpr(12)), (new NumExpr(2))))->interp(Env::empty) ->equals( new NumVal(24)));
+        CHECK(!(new MultExpr((new NumExpr(1)), (new NumExpr(1))))->interp(Env::empty) ->equals( new NumVal(3)));
+        CHECK_THROWS_WITH((new VarExpr("x"))
+                          ->interp(Env::empty), "free variable: x");
+        CHECK_THROWS_WITH((new AddExpr((new VarExpr("xyz")), (new VarExpr("abc"))))
+                          ->interp(Env::empty), "free variable: xyz");
+        CHECK_THROWS_WITH((new MultExpr((new VarExpr("hello")), (new NumExpr(1000))))
+                          ->interp(Env::empty), "free variable: hello");
+    }
+
+
 //    SECTION("subst") {
 //        CHECK((new NumExpr(10))->subst("xyz", new VarExpr("abc"))
 //              ->equals(new NumExpr(10)));
@@ -716,71 +717,71 @@ void CallExpr::pretty_print_at(std::ostream &out, precedence_t prec, int space){
 //              ->equals(new MultExpr((new NumExpr(10)), (new NumExpr(10)))));
 //        CHECK((new MultExpr((new VarExpr("abc")), (new NumExpr(10))))->subst("abc", new NumExpr(20))->equals(new MultExpr((new NumExpr(20)), (new NumExpr(10)))));
 //    }
-//
-//}
-//
-//TEST_CASE("_let"){
-//    SECTION("equal"){
-//        CHECK((new _letExpr("a", new NumExpr(10), new NumExpr(20)))->equals((new _letExpr("a", new NumExpr(10), new NumExpr(20)))));
-//        CHECK(!(new _letExpr("a", new NumExpr(10), new NumExpr(20)))->equals((new _letExpr("a", new NumExpr(20), new NumExpr(10)))));
-//        CHECK(!(new _letExpr("a", new NumExpr(10), new NumExpr(20)))->equals((new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(10))))));
-//        CHECK((new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(20))))
-//              ->equals(new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(20)))));
-//        CHECK(!(new _letExpr("a", new NumExpr(10), new NumExpr(20)))->equals(new NumExpr(1)));
-//    }
-//
-//    SECTION("interp"){
-//        CHECK((new _letExpr("a", new NumExpr(10), new NumExpr(20)))->interp() ->equals( new NumVal(20)));
-//        CHECK((new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(20))))->interp() ->equals( new NumVal(30)));
-//        CHECK_THROWS_WITH((new _letExpr("a", new VarExpr("a"), new NumExpr(10)))->interp(),"This is not a integer!");
-//        CHECK_THROWS_WITH((new _letExpr("a", new VarExpr("b"), new AddExpr(new VarExpr("b"), new NumExpr(10))))->interp(), "This is not a integer!");
-//        CHECK((new BoolExpr(true))->interp()->equals(new BoolVal(true)));
-//          CHECK(!(new BoolExpr(true))->interp()->equals(new BoolVal(false)));
-//          CHECK((new IfExpr(new BoolExpr(true), new NumExpr(10), new NumExpr(20)))
-//                ->interp()->equals(new NumVal(10)));
-//          CHECK((new IfExpr(new BoolExpr(false), new NumExpr(10), new NumExpr(20)))
-//                ->interp()->equals(new NumVal(20)));
-//          CHECK((new EqualExpr(new NumExpr(10), new NumExpr(10)))
-//                ->interp()->equals(new BoolVal(true)));
-//          CHECK((new EqualExpr(new NumExpr(10), new NumExpr(20)))
-//                ->interp()->equals(new BoolVal(false)));
-//
-//          CHECK((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10))))->interp()->equals(new FunVal("a", new AddExpr(new VarExpr("a"), new NumExpr(10)))));
-//
-//          CHECK(!(new CallExpr((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10)))), new NumExpr(15)))->interp()->equals(new NumVal(30)));
-//    }
-//
-//    SECTION("has_variable"){
-//        CHECK(!(new NumExpr(100))->has_variable());
-//        CHECK((new VarExpr("xyz"))->has_variable());
-//        CHECK(!(new AddExpr((new NumExpr(10)), (new NumExpr(10))))
-//              ->has_variable());
-//        CHECK((new AddExpr((new VarExpr("xyz")), (new NumExpr(10))))
-//              ->has_variable());
-//        CHECK(!(new MultExpr((new NumExpr(10)), (new NumExpr(10))))
-//              ->has_variable());
-//        CHECK((new MultExpr((new VarExpr("xyz")), (new NumExpr(10))))
-//              ->has_variable());
-//        CHECK(!(new _letExpr("x", new NumExpr(10), new NumExpr(20)))->has_variable());
-//        CHECK((new _letExpr("a", new VarExpr("b"), new VarExpr("c")))->has_variable());
-//        CHECK((new _letExpr("a", new AddExpr(new NumExpr(10), new VarExpr("b")), new AddExpr(new NumExpr(10), new NumExpr(20))))
-//              ->has_variable());
-//        CHECK(!(new _letExpr("a", new AddExpr(new NumExpr(3), new NumExpr(4)), new AddExpr(new NumExpr(100), new NumExpr(10))))
-//              ->has_variable());
-//        CHECK(!(new BoolExpr(true))->has_variable());
-//          CHECK(!(new BoolExpr(false))->has_variable());
-//          CHECK(!(new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30)))
-//                ->has_variable());
-//          CHECK((new IfExpr(new VarExpr("10"), new NumExpr(20), new NumExpr(30)))
-//                ->has_variable());
-//          CHECK(!(new EqualExpr(new NumExpr(10),new NumExpr(20)))->has_variable());
-//          CHECK((new EqualExpr(new VarExpr("10"),new NumExpr(20)))->has_variable());
-//
-//        CHECK_THROWS_WITH((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10))))->has_variable(), "invalid call");
-//          CHECK_THROWS_WITH((new CallExpr((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10)))), new NumExpr(20)))->has_variable(), "invalid call");
-//
-//    }
-//
+
+}
+
+TEST_CASE("_let"){
+    SECTION("equal"){
+        CHECK((new _letExpr("a", new NumExpr(10), new NumExpr(20)))->equals((new _letExpr("a", new NumExpr(10), new NumExpr(20)))));
+        CHECK(!(new _letExpr("a", new NumExpr(10), new NumExpr(20)))->equals((new _letExpr("a", new NumExpr(20), new NumExpr(10)))));
+        CHECK(!(new _letExpr("a", new NumExpr(10), new NumExpr(20)))->equals((new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(10))))));
+        CHECK((new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(20))))
+              ->equals(new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(20)))));
+        CHECK(!(new _letExpr("a", new NumExpr(10), new NumExpr(20)))->equals(new NumExpr(1)));
+    }
+
+    SECTION("interp"){
+        CHECK((new _letExpr("a", new NumExpr(10), new NumExpr(20)))->interp(Env::empty) ->equals( new NumVal(20)));
+        CHECK((new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(20))))->interp(Env::empty) ->equals( new NumVal(30)));
+        CHECK_THROWS_WITH((new _letExpr("a", new VarExpr("a"), new NumExpr(10)))->interp(Env::empty),"free variable: a");
+        CHECK_THROWS_WITH((new _letExpr("a", new VarExpr("b"), new AddExpr(new VarExpr("b"), new NumExpr(10))))->interp(Env::empty), "free variable: b");
+        CHECK((new BoolExpr(true))->interp(Env::empty)->equals(new BoolVal(true)));
+          CHECK(!(new BoolExpr(true))->interp(Env::empty)->equals(new BoolVal(false)));
+          CHECK((new IfExpr(new BoolExpr(true), new NumExpr(10), new NumExpr(20)))
+                ->interp(Env::empty)->equals(new NumVal(10)));
+          CHECK((new IfExpr(new BoolExpr(false), new NumExpr(10), new NumExpr(20)))
+                ->interp(Env::empty)->equals(new NumVal(20)));
+          CHECK((new EqualExpr(new NumExpr(10), new NumExpr(10)))
+                ->interp(Env::empty)->equals(new BoolVal(true)));
+          CHECK((new EqualExpr(new NumExpr(10), new NumExpr(20)))
+                ->interp(Env::empty)->equals(new BoolVal(false)));
+
+          CHECK((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10))))->interp(Env::empty)->equals(new FunVal("a", new AddExpr(new VarExpr("a"), new NumExpr(10)), Env::empty)));
+
+          CHECK(!(new CallExpr((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10)))), new NumExpr(15)))->interp(Env::empty)->equals(new NumVal(30)));
+    }
+
+    SECTION("has_variable"){
+        CHECK(!(new NumExpr(100))->has_variable());
+        CHECK((new VarExpr("xyz"))->has_variable());
+        CHECK(!(new AddExpr((new NumExpr(10)), (new NumExpr(10))))
+              ->has_variable());
+        CHECK((new AddExpr((new VarExpr("xyz")), (new NumExpr(10))))
+              ->has_variable());
+        CHECK(!(new MultExpr((new NumExpr(10)), (new NumExpr(10))))
+              ->has_variable());
+        CHECK((new MultExpr((new VarExpr("xyz")), (new NumExpr(10))))
+              ->has_variable());
+        CHECK(!(new _letExpr("x", new NumExpr(10), new NumExpr(20)))->has_variable());
+        CHECK((new _letExpr("a", new VarExpr("b"), new VarExpr("c")))->has_variable());
+        CHECK((new _letExpr("a", new AddExpr(new NumExpr(10), new VarExpr("b")), new AddExpr(new NumExpr(10), new NumExpr(20))))
+              ->has_variable());
+        CHECK(!(new _letExpr("a", new AddExpr(new NumExpr(3), new NumExpr(4)), new AddExpr(new NumExpr(100), new NumExpr(10))))
+              ->has_variable());
+        CHECK(!(new BoolExpr(true))->has_variable());
+          CHECK(!(new BoolExpr(false))->has_variable());
+          CHECK(!(new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30)))
+                ->has_variable());
+          CHECK((new IfExpr(new VarExpr("10"), new NumExpr(20), new NumExpr(30)))
+                ->has_variable());
+          CHECK(!(new EqualExpr(new NumExpr(10),new NumExpr(20)))->has_variable());
+          CHECK((new EqualExpr(new VarExpr("10"),new NumExpr(20)))->has_variable());
+
+        CHECK_THROWS_WITH((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10))))->has_variable(), "invalid call");
+          CHECK_THROWS_WITH((new CallExpr((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10)))), new NumExpr(20)))->has_variable(), "invalid call");
+
+    }
+
 //    SECTION("subst"){
 //        CHECK((new _letExpr("a", new NumExpr(3), new NumExpr(5)))
 //              ->subst("a", new VarExpr("z"))->equals((new _letExpr("a", new NumExpr(3), new NumExpr(5)))));
@@ -805,72 +806,72 @@ void CallExpr::pretty_print_at(std::ostream &out, precedence_t prec, int space){
 //          CHECK((new CallExpr(new VarExpr("a"), new VarExpr("a")))->subst("a", new VarExpr("b"))->equals(new CallExpr(new VarExpr("b"), new VarExpr("b"))));
 //
 //    }
-//
-//    SECTION("print"){
-//        CHECK(to_string(new _letExpr("a", new NumExpr(10), new NumExpr(20))) == "(_let a=10 _in 20)");
-//        CHECK(to_string(new _letExpr("a", new VarExpr("b"), new VarExpr("c"))) == "(_let a=b _in c)");
-//        CHECK(to_string(new _letExpr("a", new VarExpr("b"), new AddExpr(new NumExpr(10), new NumExpr(20)))) == "(_let a=b _in (10+20))");
-//        CHECK(to_string(new _letExpr("x", new AddExpr(new NumExpr(10), new VarExpr("xyz")), new VarExpr("a"))) == "(_let x=(10+xyz) _in a)");
-//
-//        CHECK(to_string( new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))) == "(_fun (x) (x+10))");
-//
-//          CHECK(to_string(new CallExpr(new VarExpr("x"), new NumExpr(10))) == "x(10)");
-//
+
+    SECTION("print"){
+        CHECK(to_string(new _letExpr("a", new NumExpr(10), new NumExpr(20))) == "(_let a=10 _in 20)");
+        CHECK(to_string(new _letExpr("a", new VarExpr("b"), new VarExpr("c"))) == "(_let a=b _in c)");
+        CHECK(to_string(new _letExpr("a", new VarExpr("b"), new AddExpr(new NumExpr(10), new NumExpr(20)))) == "(_let a=b _in (10+20))");
+        CHECK(to_string(new _letExpr("x", new AddExpr(new NumExpr(10), new VarExpr("xyz")), new VarExpr("a"))) == "(_let x=(10+xyz) _in a)");
+
+        CHECK(to_string( new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))) == "(_fun (x) (x+10))");
+
+          CHECK(to_string(new CallExpr(new VarExpr("x"), new NumExpr(10))) == "x(10)");
+
+    }
+
+//    SECTION("pretty_print"){
+//        CHECK(to_string_pretty(new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(20)))) ==
+//             "_let a = 10\n"
+//             "_in a + 20");
+//        CHECK(to_string_pretty(new _letExpr("a", new NumExpr(10), new AddExpr(new _letExpr("b", new NumExpr(20), new AddExpr(new VarExpr("b"), new NumExpr(6))), new VarExpr("a")))) ==
+//              "_let a = 10\n"
+//              "_in (_let b = 20\n"
+//              "     _in b + 6) + a");
+//        CHECK(to_string_pretty(new AddExpr(new MultExpr(new _letExpr("x", new NumExpr(10), new VarExpr("x")), new NumExpr(10)), new NumExpr(20))) ==
+//               "(_let x = 10\n"
+//               " _in x) * 10 + 20");
+
 //    }
-//
-////    SECTION("pretty_print"){
-////        CHECK(to_string_pretty(new _letExpr("a", new NumExpr(10), new AddExpr(new VarExpr("a"), new NumExpr(20)))) ==
-////             "_let a = 10\n"
-////             "_in a + 20");
-////        CHECK(to_string_pretty(new _letExpr("a", new NumExpr(10), new AddExpr(new _letExpr("b", new NumExpr(20), new AddExpr(new VarExpr("b"), new NumExpr(6))), new VarExpr("a")))) ==
-////              "_let a = 10\n"
-////              "_in (_let b = 20\n"
-////              "     _in b + 6) + a");
-////        CHECK(to_string_pretty(new AddExpr(new MultExpr(new _letExpr("x", new NumExpr(10), new VarExpr("x")), new NumExpr(10)), new NumExpr(20))) ==
-////               "(_let x = 10\n"
-////               " _in x) * 10 + 20");
-//
-////    }
-//}
-//
-//TEST_CASE("EQUAL"){
-//    CHECK((new BoolExpr(true))->equals(new BoolExpr(true)));
-//      CHECK(!(new BoolExpr(true))->equals(new BoolExpr(false)));
-//      CHECK(!(new BoolExpr(true))->equals(new NumExpr(0)));
-//      CHECK((new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30)))
-//            ->equals(new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30))));
-//      CHECK(!(new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30)))
-//            ->equals(new IfExpr(new NumExpr(10), new NumExpr(30), new NumExpr(20))));
-//      CHECK(!(new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30)))
-//            ->equals(new NumExpr(20)));
-//      CHECK((new EqualExpr(new NumExpr(10), new NumExpr(20)))
-//            ->equals(new EqualExpr(new NumExpr(10), new NumExpr(20))));
-//      CHECK(!(new EqualExpr(new NumExpr(10), new NumExpr(20)))
-//            ->equals(new EqualExpr(new NumExpr(10), new NumExpr(30))));
-//      CHECK(!(new EqualExpr(new NumExpr(10), new NumExpr(20)))
-//            ->equals(new NumExpr(20)));
-//
-//
-//
-//    CHECK((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10))))->equals(new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10)))));
-//      CHECK(!(new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10))))->equals(new FunExpr("x", new AddExpr(new VarExpr("y"), new NumExpr(20)))));
-//      CHECK(!(new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10))))->equals(new NumExpr(20)));
-//
-//      CHECK((new CallExpr((new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))), new NumExpr(20)))->equals(new CallExpr((new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))), new NumExpr(20))));
-//      CHECK(!(new CallExpr((new FunExpr("a", new AddExpr(new VarExpr("b"), new NumExpr(10)))), new NumExpr(20)))->equals(new CallExpr((new FunExpr("b", new AddExpr(new VarExpr("y"), new NumExpr(20)))), new NumExpr(10))));
-//      CHECK(!(new CallExpr((new FunExpr("a", new AddExpr(new VarExpr("b"), new NumExpr(20)))), new NumExpr(10)))->equals(new VarExpr("b")));
-//
-//}
-//
-//TEST_CASE("toString"){
-//
-//    CHECK(to_string(new BoolExpr(true)) == "_true");
-//    CHECK(to_string(new BoolExpr(false)) == "_false");
-//    CHECK(to_string(new IfExpr(new VarExpr("x"), new NumExpr(10), new NumExpr(20))) == "(_if x _then 10 _else 20)");
-//    CHECK((to_string(new EqualExpr(new NumExpr(100), new NumExpr(10))) == "(100==10)"));
-//}
-//
-//
+}
+
+TEST_CASE("EQUAL"){
+    CHECK((new BoolExpr(true))->equals(new BoolExpr(true)));
+      CHECK(!(new BoolExpr(true))->equals(new BoolExpr(false)));
+      CHECK(!(new BoolExpr(true))->equals(new NumExpr(0)));
+      CHECK((new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30)))
+            ->equals(new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30))));
+      CHECK(!(new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30)))
+            ->equals(new IfExpr(new NumExpr(10), new NumExpr(30), new NumExpr(20))));
+      CHECK(!(new IfExpr(new NumExpr(10), new NumExpr(20), new NumExpr(30)))
+            ->equals(new NumExpr(20)));
+      CHECK((new EqualExpr(new NumExpr(10), new NumExpr(20)))
+            ->equals(new EqualExpr(new NumExpr(10), new NumExpr(20))));
+      CHECK(!(new EqualExpr(new NumExpr(10), new NumExpr(20)))
+            ->equals(new EqualExpr(new NumExpr(10), new NumExpr(30))));
+      CHECK(!(new EqualExpr(new NumExpr(10), new NumExpr(20)))
+            ->equals(new NumExpr(20)));
+
+
+
+    CHECK((new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10))))->equals(new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10)))));
+      CHECK(!(new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10))))->equals(new FunExpr("x", new AddExpr(new VarExpr("y"), new NumExpr(20)))));
+      CHECK(!(new FunExpr("a", new AddExpr(new VarExpr("a"), new NumExpr(10))))->equals(new NumExpr(20)));
+
+      CHECK((new CallExpr((new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))), new NumExpr(20)))->equals(new CallExpr((new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))), new NumExpr(20))));
+      CHECK(!(new CallExpr((new FunExpr("a", new AddExpr(new VarExpr("b"), new NumExpr(10)))), new NumExpr(20)))->equals(new CallExpr((new FunExpr("b", new AddExpr(new VarExpr("y"), new NumExpr(20)))), new NumExpr(10))));
+      CHECK(!(new CallExpr((new FunExpr("a", new AddExpr(new VarExpr("b"), new NumExpr(20)))), new NumExpr(10)))->equals(new VarExpr("b")));
+
+}
+
+TEST_CASE("toString"){
+
+    CHECK(to_string(new BoolExpr(true)) == "_true");
+    CHECK(to_string(new BoolExpr(false)) == "_false");
+    CHECK(to_string(new IfExpr(new VarExpr("x"), new NumExpr(10), new NumExpr(20))) == "(_if x _then 10 _else 20)");
+    CHECK((to_string(new EqualExpr(new NumExpr(100), new NumExpr(10))) == "(100==10)"));
+}
+
+
 //
 TEST_CASE("NEW INTERP"){
     CHECK((NEW(NumExpr)(5))->interp(Env::empty)
@@ -908,7 +909,7 @@ TEST_CASE("NEW INTERP"){
     CHECK(((NEW(IfExpr)(NEW(BoolExpr)(false), NEW(NumExpr)(5), NEW(NumExpr)(10)))->interp(Env::empty)
            ->equals(NEW(NumVal)(10))));
     CHECK((NEW(FunExpr)("a", NEW(AddExpr)(NEW(VarExpr)("a"), NEW(NumExpr)(10))))->interp(Env::empty)
-          ->equals(NEW(FunVal)("a", NEW(AddExpr)(NEW( VarExpr)("a"), NEW(NumExpr)(10)))));
+          ->equals(NEW(FunVal)("a", NEW(AddExpr)(NEW( VarExpr)("a"), NEW(NumExpr)(10)), Env::empty)));
     CHECK(!(NEW(CallExpr)((NEW(FunExpr)("a", NEW(AddExpr)(NEW(VarExpr)("a"), NEW( NumExpr)(10)))), NEW(NumExpr)(15)))->interp(Env::empty)
            ->equals(NEW(NumVal)(30)));
     CHECK(!(NEW(EqualExpr)(NEW(NumExpr)(10),NEW(NumExpr)(20)))->has_variable());
@@ -920,7 +921,21 @@ TEST_CASE("NEW INTERP"){
     CHECK_THROWS_WITH((NEW(MultExpr)(NEW(NumExpr)(10),NEW(VarExpr)("x")))->interp(Env::empty), "free variable: x" );
     CHECK_THROWS_WITH((NEW(_letExpr)("x", NEW(VarExpr)("z"), NEW(AddExpr)(NEW(VarExpr)("x"), NEW(NumExpr)(10))))->interp(Env::empty), "free variable: z");
     CHECK_THROWS_WITH((NEW(IfExpr)(NEW(BoolExpr)(false), NEW(NumExpr)(10), NEW(VarExpr)("z")))->interp(Env::empty), "free variable: z");
+
+
+
+
+
+
+
+
+
+//    CHECK(parse_str("_let factrl = _fun (factrl) _fun (x) _if x == 1 _then 1 _else x * factrl(factrl)(x + -1) _in factrl(factrl)(5)")->interp(Env::empty)->equals(NEW(NumExpr)(120)) );
+//    CHECK( parse_str("_let factrl = _fun (factrl) _fun (x) _if x == 1 _then 1 _else x * factrl(factrl)(x + -1) _in factrl(factrl)(10)")->interp(Env::empty)->equals(NEW(NumExpr)(3628800)) );
+//    CHECK( parse_str("_let factrl = _fun (factrl) _fun (x) _if x == 1 _then 1 _else x * factrl(factrl)(x + -1) _in _let factorial = factrl(factrl) _in factorial(5)")->interp(Env::empty)->equals(NEW(NumVal)(120)) );
 }
+
+
     
 
         

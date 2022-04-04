@@ -10,6 +10,9 @@
 #include "parse.hpp"
 #include "expr.hpp"
 #include "catch.h"
+#include "env.hpp"
+#include "Val.hpp"
+#include "env.hpp"
 
 //skip white space
  void skip_whitespcace(std::istream &in){
@@ -160,6 +163,7 @@ PTR(Expr) parse_inner(std::istream &in){
 
 PTR(Expr) parse_multicand(std::istream &in){
     PTR(Expr) expr = parse_inner(in);
+    skip_whitespcace(in);
     while(in.peek() == '('){
         consume(in, '(');
         PTR(Expr) actual_arg = parse_expr(in);
@@ -212,6 +216,7 @@ PTR(Expr) parse_if(std::istream &in)
      if (!(_elseVar -> to_string_cmd() == "else")){
          throw std::runtime_error("invalid input of 'else'");
      }
+    skip_whitespcace(in);
     _elseExpr = parse_expr(in);
     
      return NEW (IfExpr)(_ifExpr, _thenExpr, _elseExpr);
@@ -227,16 +232,15 @@ PTR(Expr) parse_keyword(std::istream &in){
         PTR(Expr) _let = parse_let(in);
         return _let;
     }
+    else if(keyword ->to_string_cmd() =="true"){
+        return NEW (BoolExpr)(true);
+    }
+    else if(keyword ->to_string_cmd() =="false"){
+        return NEW (BoolExpr)(false);
+    }
     else if ((keyword ->to_string_cmd()=="if")){
         PTR(Expr) ifExpr = parse_if(in);
         return ifExpr;
-        
-    }
-    else if(keyword ->to_string_cmd() =="true"){
-        return NEW (BoolExpr)("_true");
-    }
-    else if(keyword ->to_string_cmd() =="false"){
-        return NEW (BoolExpr)("_false");
     }else if(keyword->to_string_cmd() == "fun"){
         PTR(Expr) funExpr = parse_fun(in);
         return funExpr;
@@ -244,7 +248,6 @@ PTR(Expr) parse_keyword(std::istream &in){
     else{
         throw std::runtime_error("invalid keyword");
     }
-    
 }
 
 //parsing let
@@ -259,8 +262,10 @@ PTR(Expr) parse_let(std::istream &in){
       lhsExpr = parse_var(in);
     PTR(VarExpr) lhs = CAST(VarExpr)(lhsExpr);
       lhsStr += lhs->variable;
+    
       skip_whitespcace(in);
       consume(in, '=');
+    
       rhs = parse_expr(in);
       skip_whitespcace(in);
       consume(in, '_');
@@ -268,6 +273,7 @@ PTR(Expr) parse_let(std::istream &in){
       if (!(kw ->to_string_cmd()== "in")){
         throw std::runtime_error("invalid input of 'in'");
       }
+    skip_whitespcace(in);
       body = parse_expr(in);
       return NEW (_letExpr)(lhsStr, rhs, body);
     }
@@ -277,7 +283,7 @@ PTR(Expr) parse_fun(std::istream &in){
     std::string formal_arg_str;
     PTR(Expr) formal_arg;
     PTR(Expr) body;
-        
+
     consume(in, '(');
     formal_arg = parse_var(in);
     PTR(VarExpr) varExpr = CAST(VarExpr)(formal_arg);
@@ -285,150 +291,201 @@ PTR(Expr) parse_fun(std::istream &in){
     consume(in, ')');
     body = parse_expr(in);
     return NEW (FunExpr)(formal_arg_str, body);
+    
+//    skip_whitespcace(in);
+//    consume(in, '(');
+//    skip_whitespcace(in);
+//    std::string formal_arg_str = parse_var(in)->to_string_cmd();
+//    skip_whitespcace(in);
+//    consume(in, ')');
+//    skip_whitespcace(in);
+//    PTR(Expr) body = parse_expr(in);
+//    skip_whitespcace(in);
+//    return NEW (FunExpr)(formal_arg_str, body);
+    
 }
 
 //****----------------------------------------TESTS----------------------------------------
 
-//TEST_CASE("TESTS"){
-//    SECTION("NUMBER")
-//        CHECK( parse_str("1")
-//              ->equals(new NumExpr(1)));
-//        CHECK( parse_str("(1)")
-//              ->equals(new NumExpr(1)));
-//        CHECK( parse_str("-1")
-//              ->equals(new NumExpr(-1)));
+TEST_CASE("TESTS"){
+    SECTION("NUMBER")
+        CHECK( parse_str("1")
+              ->equals(new NumExpr(1)));
+        CHECK( parse_str("(1)")
+              ->equals(new NumExpr(1)));
+        CHECK( parse_str("-1")
+              ->equals(new NumExpr(-1)));
+
+    SECTION("ADD")
+        CHECK( parse_str("10+-20")
+              ->equals(new AddExpr(new NumExpr(10), new NumExpr(-20))));
+        CHECK( parse_str("10  +   -20")
+          ->equals(new AddExpr(new NumExpr(10), new NumExpr(-20))));
+        CHECK( parse_str("(5+1)")
+              ->equals(new AddExpr(new NumExpr(5), new NumExpr(1))));
+        CHECK( parse_str("(20)+10")
+              ->equals(new AddExpr(new NumExpr(20), new NumExpr(10))));
+        CHECK( parse_str("10+(20)")
+              ->equals(new AddExpr(new NumExpr(10), new NumExpr(20))));
+        CHECK( parse_str("    10+(  20   )")
+              ->equals(new AddExpr(new NumExpr(10), new NumExpr(20))));
+
+    SECTION("VAR")
+        CHECK(parse_str("apple")->equals(new VarExpr("apple")));
+        CHECK(parse_str("  apple")->equals(new VarExpr("apple")));
+        CHECK(parse_str(" apple")->equals(new VarExpr("apple")));
+        CHECK(parse_str("   apple  ")->equals(new VarExpr("apple")));
+
+    SECTION("MUTIPLICATION")
+        CHECK( parse_str ("10+20*60")
+              ->equals(new AddExpr(new NumExpr(10),new MultExpr(new NumExpr(20), new NumExpr(60)))));
+        CHECK( parse_str ("60*20+10")
+              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
+        CHECK( parse_str ("60*    20  +    10")
+              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
+        CHECK( parse_str ("60*20+10")
+              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
+        CHECK( parse_str ("60*(20+10)")
+              ->equals(new MultExpr(new NumExpr(60),new AddExpr(new NumExpr(20), new NumExpr(10)))));
+        CHECK( parse_str ("(60+40)*(20+10)")
+              ->equals(new MultExpr(new AddExpr(new NumExpr(60), new NumExpr(40)),new AddExpr(new NumExpr(20), new NumExpr(10)))));
+        CHECK( parse_str ("(60+40)*(20+10)+100")
+              ->equals(new AddExpr(new MultExpr(new AddExpr(new NumExpr(60), new NumExpr(40)),new AddExpr(new NumExpr(20), new NumExpr(10))),new NumExpr(100))));
+
+    SECTION("_let")
+        CHECK(parse_str("_let x = 10"
+                    "_in x + 10")
+          ->equals(new _letExpr("x",new NumExpr(10), new AddExpr(new VarExpr("x"), new NumExpr(10)))));
+        CHECK(parse_str("_let x = 10"
+              "_in x * 10")
+            ->equals(new _letExpr("x",new NumExpr(10), new MultExpr(new VarExpr("x"), new NumExpr(10)))));
+        CHECK(parse_str("_let x = 10"
+              "_in xyz")->equals(new _letExpr("x",new NumExpr(10), new VarExpr("xyz"))));
+
+        CHECK(parse_str("_let x = 10\n"
+              "_in (_let y = 20\n"
+                 "_in y + 30) + x")
+            ->equals(new _letExpr("x", new NumExpr(10), new AddExpr(new _letExpr("y", new NumExpr(20), new AddExpr(new VarExpr("y"), new NumExpr(30))), new VarExpr("x")))));
+        CHECK(parse_str("10 * _let x = 20\n"
+                "_in x + 30")
+            ->equals(new MultExpr(new NumExpr(10), new _letExpr("x", new NumExpr(20), new AddExpr(new VarExpr("x"), new NumExpr(30))))));
+        CHECK( parse_str("_let x = x + 1\n"
+                         "_in x + 2")
+              -> equals (new _letExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(1)), new AddExpr(new VarExpr("x"), new NumExpr(2)))) );
+        CHECK( parse_str("(_let x = 10\n"
+              " _in x + 2) * 2 * 4")
+              -> equals (new MultExpr((new _letExpr("x", new NumExpr(10), new AddExpr(new VarExpr("x"), new NumExpr(2)))), new MultExpr(new NumExpr(2), new NumExpr(4)))) );
+
+        CHECK( parse_str(" _if \n  _true \n _then a\n  _else  b\n")
+              -> equals (new IfExpr(new BoolExpr("_true"), new VarExpr("a"), new VarExpr("b"))) );
+
+        CHECK( parse_str("(_if _true _then a _else b)")
+              -> equals (new IfExpr(new BoolExpr("_true"), new VarExpr("a"), new VarExpr("b"))) );
+
+        CHECK( parse_str("(_if (_true) _then ((a)) _else (b))")
+              -> equals (new IfExpr(new BoolExpr("_true"), new VarExpr("a"), new VarExpr("b"))) );
+
+        CHECK( parse_str("_if_true_then 10  _else60 ")
+              -> equals (new IfExpr(new BoolExpr("_true"), new NumExpr(10), new NumExpr(60)))
+                        );
+    CHECK( parse_str("_if _false _then 10  _else 60 ")
+          -> equals (new IfExpr(new BoolExpr("_true"), new NumExpr(10), new NumExpr(60)))
+                    );
+         CHECK( parse_str("_if a _then b _else (c)")
+               -> equals (new IfExpr(new VarExpr("a"), new VarExpr("b"), new VarExpr("c"))) );
+    CHECK(parse_str("1 == 1")->equals(new EqualExpr(new NumExpr(1), new NumExpr(1))));
+
+    CHECK(parse_str("_fun (x) (x+10)")-> equals(new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))) );
+
+      CHECK(parse_str("x(10)") -> equals(new CallExpr(new VarExpr("x"), new NumExpr(10))));
+
+
+    SECTION("ERROR TESTS")
+    CHECK_THROWS_WITH(parse_str("- 1"),"Dangling negative.");
+     CHECK_THROWS_WITH(parse_str("_let x = a 10"
+                                "_in x + 10"),"consume mismatch");
+     CHECK_THROWS_WITH(parse_str("_let x = 10"
+                                "_in x+(x + 10"),"missing close parenthesis");
+     CHECK_THROWS_WITH(parse_str("_let x =+ 10"
+                                "_in x + 10"),"invalid input");
+     CHECK_THROWS_WITH(parse_str("_let x = 1 * a + 10)"
+                                "(_in x + 10"),"consume mismatch");
+     CHECK_THROWS_WITH(parse_str("_let x  1 * 10)"
+                                "_in x + 10"),"consume mismatch");
+     CHECK_THROWS_WITH(parse_str("_hi x = 1 * 10)"
+                                "_in x + 10"),"invalid keyword");
+     CHECK_THROWS_WITH(parse_str("_let x = 1 * 10)"
+                                "_xxxx x + 10"),"consume mismatch");
+     CHECK_THROWS_WITH( parse_str("(_let x = x + 1\n"
+                    "_in (x + 3) * 1"), "missing close parenthesis");
+     CHECK_THROWS_WITH( parse_str("_let x = x + 1\n"
+                    "_in (x + 3) * 1)"), "unexpected input after expression");
+     CHECK_THROWS_WITH( parse_str("_lot x = x + 1\n"
+                    "_in (x + 3) * 1)"), "invalid keyword");
+     CHECK_THROWS_WITH( parse_str("_let x = x + 1\n"
+                    "_on (x + 3) * 1)"), "invalid input of 'in'");
+     CHECK_THROWS_WITH( parse_str("_let x = x + 1\n"
+                    "(x + 3) * 1)"), "consume mismatch");
+     CHECK_THROWS_WITH( parse_str("(_let x x + 1\n"
+                    "_in (x + 3) * 1"), "consume mismatch");
+     CHECK_THROWS_WITH( parse_str("(_let x == x + 1\n"
+                    "_in (x + 3) * 1"), "invalid input");
+     CHECK_THROWS_WITH( parse_str("_iffffff _true _then a _else b"),
+                      "invalid keyword");
+     CHECK_THROWS_WITH( parse_str("_if _true _xxxx x _else a"),
+                      "invalid input of 'then'");
+     CHECK_THROWS_WITH( parse_str("_if _true zz _else b"),
+                      "consume mismatch");
+     CHECK_THROWS_WITH( parse_str("_if _true _then x _ese y"),
+                      "invalid input of 'else'");
+     CHECK_THROWS_WITH( parse_str("_if _true _then abab yyyy"),
+                      "consume mismatch");
+     CHECK_THROWS_WITH( parse_str("_if = true then a _else b"),
+                      "invalid input");
+     CHECK_THROWS_WITH( parse_str("(_if _true _then a _else b"),
+                      "missing close parenthesis");
+     CHECK_THROWS_WITH( parse_str("_if _true _then a _else b)"),
+                      "unexpected input after expression");
+}
+
+TEST_CASE("test"){
+    
+    CHECK( parse_str("_let factrl = _fun (factrl) _fun (x) _if x == 1 _then 1 _else x * factrl(factrl)(x + -1) _in factrl(factrl)(5)")->interp(Env::empty)->equals(NEW(NumVal)(120)) );
+    CHECK( parse_str("_let factrl = _fun (factrl) _fun (x) _if x == 1 _then 1 _else x * factrl(factrl)(x + -1) _in factrl(factrl)(10)")->interp(Env::empty)->equals(NEW(NumVal)(3628800)) );
+    CHECK( parse_str("_let factrl = _fun (factrl) _fun (x) _if x == 1 _then 1 _else x * factrl(factrl)(x + -1) _in _let factorial = factrl(factrl) _in factorial(5)")->interp(Env::empty)->equals(NEW(NumVal)(120)) );
+
+}
+
+//TEST_CASE("fib"){
 //
-//    SECTION("ADD")
-//        CHECK( parse_str("10+-20")
-//              ->equals(new AddExpr(new NumExpr(10), new NumExpr(-20))));
-//        CHECK( parse_str("10  +   -20")
-//          ->equals(new AddExpr(new NumExpr(10), new NumExpr(-20))));
-//        CHECK( parse_str("(5+1)")
-//              ->equals(new AddExpr(new NumExpr(5), new NumExpr(1))));
-//        CHECK( parse_str("(20)+10")
-//              ->equals(new AddExpr(new NumExpr(20), new NumExpr(10))));
-//        CHECK( parse_str("10+(20)")
-//              ->equals(new AddExpr(new NumExpr(10), new NumExpr(20))));
-//        CHECK( parse_str("    10+(  20   )")
-//              ->equals(new AddExpr(new NumExpr(10), new NumExpr(20))));
-//
-//    SECTION("VAR")
-//        CHECK(parse_str("apple")->equals(new VarExpr("apple")));
-//        CHECK(parse_str("  apple")->equals(new VarExpr("apple")));
-//        CHECK(parse_str(" apple")->equals(new VarExpr("apple")));
-//        CHECK(parse_str("   apple  ")->equals(new VarExpr("apple")));
-//
-//    SECTION("MUTIPLICATION")
-//        CHECK( parse_str ("10+20*60")
-//              ->equals(new AddExpr(new NumExpr(10),new MultExpr(new NumExpr(20), new NumExpr(60)))));
-//        CHECK( parse_str ("60*20+10")
-//              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
-//        CHECK( parse_str ("60*    20  +    10")
-//              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
-//        CHECK( parse_str ("60*20+10")
-//              ->equals(new AddExpr(new MultExpr(new NumExpr(60), new NumExpr(20)),new NumExpr(10))));
-//        CHECK( parse_str ("60*(20+10)")
-//              ->equals(new MultExpr(new NumExpr(60),new AddExpr(new NumExpr(20), new NumExpr(10)))));
-//        CHECK( parse_str ("(60+40)*(20+10)")
-//              ->equals(new MultExpr(new AddExpr(new NumExpr(60), new NumExpr(40)),new AddExpr(new NumExpr(20), new NumExpr(10)))));
-//        CHECK( parse_str ("(60+40)*(20+10)+100")
-//              ->equals(new AddExpr(new MultExpr(new AddExpr(new NumExpr(60), new NumExpr(40)),new AddExpr(new NumExpr(20), new NumExpr(10))),new NumExpr(100))));
-//
-//    SECTION("_let")
-//        CHECK(parse_str("_let x = 10"
-//                    "_in x + 10")
-//          ->equals(new _letExpr("x",new NumExpr(10), new AddExpr(new VarExpr("x"), new NumExpr(10)))));
-//        CHECK(parse_str("_let x = 10"
-//              "_in x * 10")
-//            ->equals(new _letExpr("x",new NumExpr(10), new MultExpr(new VarExpr("x"), new NumExpr(10)))));
-//        CHECK(parse_str("_let x = 10"
-//              "_in xyz")->equals(new _letExpr("x",new NumExpr(10), new VarExpr("xyz"))));
-//
-//        CHECK(parse_str("_let x = 10\n"
-//              "_in (_let y = 20\n"
-//                 "_in y + 30) + x")
-//            ->equals(new _letExpr("x", new NumExpr(10), new AddExpr(new _letExpr("y", new NumExpr(20), new AddExpr(new VarExpr("y"), new NumExpr(30))), new VarExpr("x")))));
-//        CHECK(parse_str("10 * _let x = 20\n"
-//                "_in x + 30")
-//            ->equals(new MultExpr(new NumExpr(10), new _letExpr("x", new NumExpr(20), new AddExpr(new VarExpr("x"), new NumExpr(30))))));
-//        CHECK( parse_str("_let x = x + 1\n"
-//                         "_in x + 2")
-//              -> equals (new _letExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(1)), new AddExpr(new VarExpr("x"), new NumExpr(2)))) );
-//        CHECK( parse_str("(_let x = 10\n"
-//              " _in x + 2) * 2 * 4")
-//              -> equals (new MultExpr((new _letExpr("x", new NumExpr(10), new AddExpr(new VarExpr("x"), new NumExpr(2)))), new MultExpr(new NumExpr(2), new NumExpr(4)))) );
-//
-//        CHECK( parse_str(" _if \n  _true \n _then a\n  _else  b\n")
-//              -> equals (new IfExpr(new BoolExpr("_true"), new VarExpr("a"), new VarExpr("b"))) );
-//
-//        CHECK( parse_str("(_if _true _then a _else b)")
-//              -> equals (new IfExpr(new BoolExpr("_true"), new VarExpr("a"), new VarExpr("b"))) );
-//
-//        CHECK( parse_str("(_if (_true) _then ((a)) _else (b))")
-//              -> equals (new IfExpr(new BoolExpr("_true"), new VarExpr("a"), new VarExpr("b"))) );
-//
-//        CHECK( parse_str("_if_true_then 10  _else60 ")
-//              -> equals (new IfExpr(new BoolExpr("_true"), new NumExpr(10), new NumExpr(60)))
-//                        );
-//    CHECK( parse_str("_if _false _then 10  _else 60 ")
-//          -> equals (new IfExpr(new BoolExpr("_true"), new NumExpr(10), new NumExpr(60)))
-//                    );
-//         CHECK( parse_str("_if a _then b _else (c)")
-//               -> equals (new IfExpr(new VarExpr("a"), new VarExpr("b"), new VarExpr("c"))) );
-//    CHECK(parse_str("1 == 1")->equals(new EqualExpr(new NumExpr(1), new NumExpr(1))));
-//
-//    CHECK(parse_str("_fun (x) (x+10)")-> equals(new FunExpr("x", new AddExpr(new VarExpr("x"), new NumExpr(10)))) );
-//
-//      CHECK(parse_str("x(10)") -> equals(new CallExpr(new VarExpr("x"), new NumExpr(10))));
-//
-//
-//SECTION("ERROR TESTS")
-//    CHECK_THROWS_WITH(parse_str("- 1"),"Dangling negative.");
-//     CHECK_THROWS_WITH(parse_str("_let x = a 10"
-//                                "_in x + 10"),"consume mismatch");
-//     CHECK_THROWS_WITH(parse_str("_let x = 10"
-//                                "_in x+(x + 10"),"missing close parenthesis");
-//     CHECK_THROWS_WITH(parse_str("_let x =+ 10"
-//                                "_in x + 10"),"invalid input");
-//     CHECK_THROWS_WITH(parse_str("_let x = 1 * a + 10)"
-//                                "(_in x + 10"),"consume mismatch");
-//     CHECK_THROWS_WITH(parse_str("_let x  1 * 10)"
-//                                "_in x + 10"),"consume mismatch");
-//     CHECK_THROWS_WITH(parse_str("_hi x = 1 * 10)"
-//                                "_in x + 10"),"invalid keyword");
-//     CHECK_THROWS_WITH(parse_str("_let x = 1 * 10)"
-//                                "_xxxx x + 10"),"consume mismatch");
-//     CHECK_THROWS_WITH( parse_str("(_let x = x + 1\n"
-//                    "_in (x + 3) * 1"), "missing close parenthesis");
-//     CHECK_THROWS_WITH( parse_str("_let x = x + 1\n"
-//                    "_in (x + 3) * 1)"), "unexpected input after expression");
-//     CHECK_THROWS_WITH( parse_str("_lot x = x + 1\n"
-//                    "_in (x + 3) * 1)"), "invalid keyword");
-//     CHECK_THROWS_WITH( parse_str("_let x = x + 1\n"
-//                    "_on (x + 3) * 1)"), "invalid input of 'in'");
-//     CHECK_THROWS_WITH( parse_str("_let x = x + 1\n"
-//                    "(x + 3) * 1)"), "consume mismatch");
-//     CHECK_THROWS_WITH( parse_str("(_let x x + 1\n"
-//                    "_in (x + 3) * 1"), "consume mismatch");
-//     CHECK_THROWS_WITH( parse_str("(_let x == x + 1\n"
-//                    "_in (x + 3) * 1"), "invalid input");
-//     CHECK_THROWS_WITH( parse_str("_iffffff _true _then a _else b"),
-//                      "invalid keyword");
-//     CHECK_THROWS_WITH( parse_str("_if _true _xxxx x _else a"),
-//                      "invalid input of 'then'");
-//     CHECK_THROWS_WITH( parse_str("_if _true zz _else b"),
-//                      "consume mismatch");
-//     CHECK_THROWS_WITH( parse_str("_if _true _then x _ese y"),
-//                      "invalid input of 'else'");
-//     CHECK_THROWS_WITH( parse_str("_if _true _then abab yyyy"),
-//                      "consume mismatch");
-//     CHECK_THROWS_WITH( parse_str("_if = true then a _else b"),
-//                      "invalid input");
-//     CHECK_THROWS_WITH( parse_str("(_if _true _then a _else b"),
-//                      "missing close parenthesis");
-//     CHECK_THROWS_WITH( parse_str("_if _true _then a _else b)"),
-//                      "unexpected input after expression");
+//    CHECK(parse_str("_let pair = _fun (a) _fun (b)"
+//    "              _fun(sel)"
+//    "              _if sel _then a _else b"
+//    "_in _let fst = _fun (p) p(_true)"
+//    "_in _let snd = _fun (p) p(_false)"
+//    "_in _let fib = _fun (fib)"
+//    "                _fun (x)"
+//    "                  _if x == 0"
+//    "                  _then pair(1)(1)"
+//    "                  _else _if x == 1"
+//    "                        _then pair(1)(1)"
+//    "                        _else _let p = fib(fib)(x + -1)"
+//    "                              _in pair(fst(p) + snd(p))(fst(p))"
+//              "_in  fst(fib(fib)(30))") ->interp(Env::empty)->equals(NEW(NumVal(1346269))));
 //}
-
-
-
+//
+//TEST_CASE("fastfib") {
+//        CHECK(parse_str("_let pair = _fun (a) _fun (b)"
+//              "_fun(sel)"
+//              "_if sel _then a _else b"
+//              "_in _let fst = _fun (p) p(_true)"
+//              "_in _let snd = _fun (p) p(_false)"
+//              "_in _let fib = _fun (fib)"
+//              "  _fun (x)"
+//              "    _if x == 0"
+//              "    _then pair(1)(1)"
+//              "    _else _if x == 1"
+//              "          _then pair(1)(1)"
+//              "          _else _let p = fib(fib)(x + -1)"
+//              "                _in pair(fst(p) + snd(p))(fst(p))"
+//              "_in  fst(fib(fib)(30))")->interp(Env::empty)->equals(NEW(NumVal(1346269))));
