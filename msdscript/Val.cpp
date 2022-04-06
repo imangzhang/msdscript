@@ -138,43 +138,43 @@ PTR(Val) FunVal::call(PTR(Val) actual_arg){
 //-------------------------------------TESTS-----------------------------------------
 
 TEST_CASE("NumVal") {
-  CHECK(!(new NumVal(10)) -> equals (new NumVal(1)));
-  CHECK((new NumVal(10)) -> equals (new NumVal(10)));
-    CHECK(!(new NumVal(10)) -> equals (new BoolVal(true)));
-  CHECK(((new NumVal(10)) -> add_to(new NumVal(20))) -> equals(new NumVal(30)));
-  CHECK(!((new NumVal(10)) -> add_to(new NumVal(20))) -> equals(new NumVal(1)));
-  CHECK(((new NumVal(10)) -> mult_to(new NumVal(2))) -> equals(new NumVal(20)));
-  CHECK(!((new NumVal(10)) -> mult_to(new NumVal(2))) -> equals(new NumVal(10)));
-  CHECK(((new NumVal(10)) -> to_expr()) -> equals (new NumExpr(10)));
-  CHECK(!((new NumVal(10)) -> to_expr()) -> equals (new NumExpr(200)));
-  CHECK((new NumVal(10)) -> to_string() == "10");
-  CHECK((new NumVal(10)) -> to_string() != "2");
-  CHECK_THROWS_WITH(((new NumVal(1)) -> add_to(new BoolVal(true))),
+  CHECK(!(NEW (NumVal)(10)) -> equals (NEW (NumVal)(1)));
+  CHECK((NEW (NumVal)(10)) -> equals (NEW (NumVal)(10)));
+    CHECK(!(NEW (NumVal)(10)) -> equals (NEW (BoolVal)(true)));
+  CHECK(((NEW (NumVal)(10)) -> add_to(NEW (NumVal)(20))) -> equals(NEW (NumVal)(30)));
+  CHECK(!((NEW (NumVal)(10)) -> add_to(NEW (NumVal)(20))) -> equals(NEW (NumVal)(1)));
+  CHECK(((NEW (NumVal)(10)) -> mult_to(NEW (NumVal)(2))) -> equals(NEW (NumVal)(20)));
+  CHECK(!((NEW (NumVal)(10)) -> mult_to(NEW (NumVal)(2))) -> equals(NEW (NumVal)(10)));
+  CHECK(((NEW (NumVal)(10)) -> to_expr()) -> equals (NEW (NumExpr)(10)));
+  CHECK(!((NEW (NumVal)(10)) -> to_expr()) -> equals (NEW (NumExpr)(200)));
+  CHECK((NEW (NumVal)(10)) -> to_string() == "10");
+  CHECK((NEW (NumVal)(10)) -> to_string() != "2");
+  CHECK_THROWS_WITH(((NEW (NumVal)(1)) -> add_to(NEW (BoolVal)(true))),
                     "cannot add numbers");
-    CHECK_THROWS_WITH(((new NumVal(1)) -> mult_to(new BoolVal(true))), "cannot mutiple numbers");
+    CHECK_THROWS_WITH(((NEW (NumVal)(1)) -> mult_to(NEW (BoolVal)(true))), "cannot mutiple numbers");
 }
 
 TEST_CASE("BoolVal"){
-  CHECK((new BoolVal(true)) -> equals (new BoolVal(true)));
-  CHECK(!(new BoolVal(true)) -> equals (new BoolVal(false)));
-  CHECK(!(new BoolVal(true)) -> equals (new NumVal(777)));
-  CHECK(((new BoolVal(true)) -> to_expr()) -> equals (new BoolExpr(true)));
-  CHECK(!((new BoolVal(true)) -> to_expr()) -> equals (new BoolExpr(false)));
-  CHECK_THROWS_WITH(((new BoolVal(true)) -> add_to(new BoolVal(true))), "cannot add numbers");
-  CHECK_THROWS_WITH(((new BoolVal(true)) -> mult_to(new BoolVal(true))), "cannot mutiple numbers");
-    CHECK((new BoolVal(true)) -> to_string() == "_true");
-      CHECK((new BoolVal(false)) -> to_string() == "_false");
-      CHECK((new BoolVal(true)) -> to_string() != "_false");
+  CHECK((NEW (BoolVal)(true)) -> equals (NEW (BoolVal)(true)));
+  CHECK(!(NEW (BoolVal)(true)) -> equals (NEW (BoolVal)(false)));
+  CHECK(!(NEW (BoolVal)(true)) -> equals (NEW (NumVal)(777)));
+  CHECK(((NEW (BoolVal)(true)) -> to_expr()) -> equals (NEW (BoolExpr)(true)));
+  CHECK(!((NEW (BoolVal)(true)) -> to_expr()) -> equals (NEW (BoolExpr)(false)));
+  CHECK_THROWS_WITH(((NEW (BoolVal)(true)) -> add_to(NEW (BoolVal)(true))), "cannot add numbers");
+  CHECK_THROWS_WITH(((NEW (BoolVal)(true)) -> mult_to(NEW (BoolVal)(true))), "cannot mutiple numbers");
+    CHECK((NEW (BoolVal)(true)) -> to_string() == "_true");
+      CHECK((NEW (BoolVal)(false)) -> to_string() == "_false");
+      CHECK((NEW (BoolVal)(true)) -> to_string() != "_false");
 }
 
 TEST_CASE("FunVal") {
-      CHECK((new FunVal("a", new NumExpr(10), Env::empty))->equals(new FunVal("a", new NumExpr(10), Env::empty)));
-      CHECK(!(new FunVal("a", new NumExpr(10), Env::empty))->equals(new FunVal("a", new NumExpr(20), Env::empty)));
-      CHECK(!(new FunVal("a", new NumExpr(10), Env::empty))->equals(new NumVal(20)));
-      CHECK_THROWS_WITH(((new FunVal("a", new NumExpr(10), Env::empty)) -> add_to(new BoolVal(true))), "cannot add numbers");
-      CHECK_THROWS_WITH(((new FunVal("a", new NumExpr(10), Env::empty)) -> mult_to(new BoolVal(true))), "cannot mutiple numbers");
-      CHECK((new FunVal("a", new NumExpr(10), Env::empty))->to_string() == "[function]");
-      CHECK((new FunVal("a", new NumExpr(10), Env::empty))->to_expr()->equals(new FunExpr("a", new NumExpr(10))));
+      CHECK((NEW (FunVal)("a", NEW (NumExpr)(10), Env::empty))->equals(NEW (FunVal)("a", NEW (NumExpr)(10), Env::empty)));
+      CHECK(!(NEW (FunVal)("a", NEW (NumExpr)(10), Env::empty))->equals(NEW (FunVal)("a", NEW (NumExpr)(20), Env::empty)));
+      CHECK(!(NEW (FunVal)("a", NEW (NumExpr)(10), Env::empty))->equals(NEW (NumVal)(20)));
+      CHECK_THROWS_WITH(((NEW (FunVal)("a", NEW (NumExpr)(10), Env::empty)) -> add_to(NEW (BoolVal)(true))), "cannot add numbers");
+      CHECK_THROWS_WITH(((NEW (FunVal)("a", NEW (NumExpr)(10), Env::empty)) -> mult_to(NEW (BoolVal)(true))), "cannot mutiple numbers");
+      CHECK((NEW (FunVal)("a", NEW (NumExpr)(10), Env::empty))->to_string() == "[function]");
+      CHECK((NEW (FunVal)("a", NEW (NumExpr)(10), Env::empty))->to_expr()->equals(NEW (FunExpr)("a", NEW (NumExpr)(10))));
     }
 
 
