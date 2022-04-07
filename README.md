@@ -25,7 +25,7 @@ Here are four arguments are allowed in terminal:
 # MSDscript API
 ## Grammar 
    ```
-	〈expr〉	=〈number〉 			
+	〈expr〉=〈number〉 			
           |〈variable〉
           |〈boolean〉 
           |〈expr〉==〈expr〉 
