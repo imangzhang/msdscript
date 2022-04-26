@@ -22,7 +22,7 @@ void use_arguments(int argc, char **argv){
     for(int i=1; i<argc;i++){ //start on position 1
         std::string input = argv[i];
         if(input=="--help"){ //"--help" condition
-            std::cout<<"There is two arguments are allowed: '--help' and '--test'."<<"\n";
+            std::cout<<"There is four arguments are allowed: '--help',  '--test', '-interp', and '--print'."<<"\n";
             exit(0);
         }
         else if (input=="--test"){//"--test" condition

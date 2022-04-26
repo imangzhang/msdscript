@@ -6,6 +6,9 @@
 //
 #include <iostream>
 #include "cmdline.hpp"
+#include "env.hpp"
+#include "parse.hpp"
+#include "var.hpp"
 #include "catch.h"
 #include "expr.hpp"
 
