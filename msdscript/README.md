@@ -21,16 +21,18 @@ MSDscript is an interpreter built upon a C++ that allows some mathematical expre
     std::cout << parse_str(expr)->interp(Env::empty)->to_string() << std::endl;
     ``` 
   4. Open your terminal and run the commands below:
-
-    `$c++ -std=c++14 -c cmdline.cpp env.cpp expr.cpp parse.cpp Val.cpp` 
-    ` $ar -ruv libmsdcript.a cmdline.o env.o expr.o parse.o Val.o` 
-    ` $c++ -o programName program.cpp libmsdscript.a` 
+     ```
+     $c++ -std=c++14 -c cmdline.cpp env.cpp expr.cpp parse.cpp Val.cpp
+     $ar -ruv libmsdcript.a cmdline.o env.o expr.o parse.o Val.o
+     $c++ -o programName program.cpp libmsdscript.a
+     
+     ```
 
 # MSDscript User Guide
 ## General Input and Keywords
 MSDscript is able to parse input with extra white sapce and new lines. Any character from ASCII can be variable name except`_`, because some reserved keyword are denoted with `_`. 
 
-###Keywords
+### Keywords
 - Numbers
     - Numbers in the MSDscript need to be positive or negative integers
     - Good Example: `1`, `80`, `1000000`, `-3`, `-10`, `0`, `-300000`
@@ -100,47 +102,46 @@ Here are four arguments are allowed in terminal:
    - it will show you the answer is (2+(3*6))
    
 ## Embed MSDscript in which_day program
-The `which_day` program takes a week number (counting form 0) as a
+- The `which_day` program takes a week number (counting form 0) as a
 command-line argument and tells you which day to meet that week (0 =
 Sunday, 1 = Monday, etc.). 
 The choice of meeting day is configured by a user who writes an
-MSDscript program in "~/.which_day", so a user can set up an
-arbitrarily complex meeting schedule. The program in "~/.which_day"
-should produce a function that takes a week number.
-After you build the implementation as library, type following command in your terminal:
-      `which_day 13`
-The output should be 4, meaning that you meet on Thursdat in week 13.  
+MSDscript program in "~/.which_day", so a user can set up an arbitrarily complex meeting scheule. The program should produce a function that takes a week number. 
+- After you build the implementation as library, type following command in your terminal:
+`which_day 13` 
+- The output should be 4, meaning that you meet on Thursdat in week 13.  
 
 
 
 # MSDscript API
 
 ## Important Vocabularies
-    - Val: the different types of value that expr can interprete. The types include NumVal, BoolVal, and FunVal which represent number, boolean, and function values.  
-    - expr: represents expression that can be utilized by MSDscript. MSDscript allows different types of exprs depend on the input.
-    - Parse: convert a human readable expression to a script expression.
-    - Interp: MSDscript's version that convert an expr to an Val
-    - lhs: left-hand side of the expression
-    - rhs: right-hand side of the expression
+- `Val` the different types of value that expr can interprete. The types include NumVal, BoolVal, and FunVal which represent number, boolean, and function values.  
+- `expr` represents expression that can be utilized by MSDscript. MSDscript allows different types of exprs depend on the input.
+- `Parse` convert a human readable expression to a script expression.
+- `Interp` MSDscript's version that convert an expr to an Val
+- `lhs` left-hand side of the expression
+- `rhs` right-hand side of the expression
     
 ## Files
 ### Core files
-    - ` expr.cpp`  and ` expr.hpp` : the main expression file which contains all the expressions
-    - ` Val.cpp`  and ` Val.hpp` : store different type of values that needed by expressions
-    - ` Env.cpp`  and ` Env.hpp` : allow quicker referencing of variable values
-    - ` Step.cpp`  and ` Step.hpp` : for step interpretation that prevents segematation faults
-    - ` pointer.cpp`  and ` pointer.hpp` : for switching the shared and regular pointers
-    - ` Cont.cpp`  and ` Cont.hpp` : allow step mode interpretation    
+- `expr.cpp` and `expr.hpp`  the main expression file which contains all the expressions
+-  `Val.cpp` and `Val.hpp`  store different type of values that needed by expressions
+-  `Env.cpp`  and `Env.hpp`  allow quicker referencing of variable values
+-  `Step.cpp`  and  `Step.hpp`  for step interpretation that prevents segematation faults
+-  `pointer.cpp`  and  `pointer.hpp` for switching the shared and regular pointers
+-  `Cont.cpp`  and  `Cont.hpp` allow step mode interpretation   
+    
 ### Optional files
-    - ` main.cpp`  and ` main.hpp` : This file can be used for easy utilization of parse and interp methods.
-    - ` parse.cpp`  and ` parse.hpp` : can parse the input strings to expressions. If you don't use parse then you don't need it
+-  `main.cpp`  and  `main.hpp`  This file can be used for easy utilization of parse and interp methods.
+-  `parse.cpp`  and  `parse.hpp` :can parse the input strings to expressions. If you don't use parse then you don't need it
     
 ## Classes details
 ### Parse Class
 Parse class makes MSDscript able to parse formated types of input to do actions such as: addtion, multiplication, and comparision.
-  - Valid Syntax:
-    - `PTR(Expr) parse(std::istream &inputStream);` takes in an istream, parse and return it as an Expr
-    - `PTR(Expr) parseString(std::string s);` takes in a string and return it as an Expr. It is a wrapper function for the parse() function.
+- Valid Syntax:
+  -  `PTR(Expr) parse(std::istream &inputStream);` takes in an istream, parse and return it as an Expr
+  -  `PTR(Expr) parseString(std::string s);` takes in a string and return it as an Expr. It is a wrapper function for the parse() function.
 
 ### Val Class
 Val class is the main class for all other subclassess
@@ -150,10 +151,10 @@ Val class is the main class for all other subclassess
    - ` FunVal`  Represents a function value
 #### Val Functions
    - ` bool equals(PTR(Val) o)`  returns `true` or `false` depends on if two values are equivalent. If they are equal, return `true`, else return `false`
-   - ` PTR(Val) addTo(PTR(Val) otherVal)`  returns PTR(Val) of an addition value of the calling value to the parameter otherVal
-   - ` PTR(Val) multBy(PTR(Val) otherVal)`  returns PTR(Val) of an mutiplication value of the calling value to the parameter otherVal
-   - ` PTR(Val) call (PTR(Val) actualArg)`  returns PTR(Val) which call the function witn the input argument
-   - ` std::string toString()`  returns string which converts current value to a string
+   - ` PTR(Val) addTo(PTR(Val) otherVal)`  returns `PTR(Val)` of an addition value of the calling value to the parameter `otherVal`
+   - ` PTR(Val) multBy(PTR(Val) otherVal)`  returns `PTR(Val)` of an mutiplication value of the calling value to the parameter `otherVal`
+   - ` PTR(Val) call (PTR(Val) actualArg)`  returns `PTR(Val)` which call the function witn the input argument
+   - ` std::string toString()`  returns `string` which converts current value to a `string`
    
    
 ### Expr Class
